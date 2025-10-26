@@ -1,0 +1,35 @@
+prod: &default
+  secret_key: 48716746efd74c80b72175f17e40224f
+
+  client:
+    port: 8000
+  http:
+    port: 8001
+    allow_origins:
+      - http://localhost
+      - https://logistics.sputnik-monitor.ru
+      - https://logistics-dev.sputnik-monitor.ru
+      - https://packapi.sputnik-monitor.ru
+    allow_headers:
+      - Authorization
+      - X-Requested-With
+      - X-Client-Version
+      - Origin
+      - Content-Type
+      - WithCredentials
+    allow_methods:
+      - PUT
+      - PATCH
+      - GET
+      - POST
+      - DELETE
+      - OPTIONS
+    allow_wildcard: true
+    allow_credentials: true
+    expose_headers:
+      - Content-Length
+    max_age: 12h
+  db:
+    dsn: database.sql
+dev: 
+  <<: *default
