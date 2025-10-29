@@ -19,8 +19,7 @@ type InputField[T InputValue] struct {
 	tp          string
 	label       string
 	placeholder string
-	value       T
-	rcv         *T
+	Val         *T
 	autofocus   bool
 	required    bool
 	clearable   bool
@@ -28,8 +27,6 @@ type InputField[T InputValue] struct {
 	max         any
 	step        float64
 	prependIcon string
-
-	onInput app.EventHandler
 }
 
 func NewInputField[T InputValue]() *InputField[T] {
@@ -41,13 +38,13 @@ func (f *InputField[T]) Render() app.UI {
 		Type(f.tp).
 		ID(f.id).
 		Class("form-control", f.inputClass).
-		Value(f.value).
+		Value(*f.Val).
 		Min(f.min).
 		Max(f.max).
 		Step(f.step).
 		Placeholder(f.placeholder).
 		AutoFocus(f.autofocus).
-		OnInput(f.onInput)
+		OnInput(f.ValueTo(f.Val))
 
 	return app.Div().Class(f.wrapClass).Body(
 
@@ -70,10 +67,11 @@ func (f *InputField[T]) Render() app.UI {
 				input,
 
 				// Clear icon
-				app.If(f.clearable && !tools.IsEmpty(f.value), func() app.UI {
+				app.If(f.clearable && !tools.IsEmpty(f.Val), func() app.UI {
 					return app.Div().Class("input-group-append").Body(
-						NewIcon("close").Class("input-group-text").El().OnClick(func(ctx app.Context, e app.Event) {
-							input.JSValue().Set("value", *new(T))
+						NewIcon("close").Class("input-group-text").El().Role("button").OnClick(func(ctx app.Context, e app.Event) {
+							*f.Val = *new(T)
+							app.Window().GetElementByID(f.id).Set("value", *f.Val)
 						}),
 					)
 				}),
@@ -126,13 +124,8 @@ func (f *InputField[T]) Placeholder(text string) *InputField[T] {
 	return f
 }
 
-func (f *InputField[T]) Value(value T) *InputField[T] {
-	f.value = value
-	return f
-}
-
-func (f *InputField[T]) Rcv(value *T) *InputField[T] {
-	f.rcv = value
+func (f *InputField[T]) Value(value *T) *InputField[T] {
+	f.Val = value
 	return f
 }
 
@@ -153,10 +146,5 @@ func (f *InputField[T]) Step(value float64) *InputField[T] {
 
 func (f *InputField[T]) PrependIcon(value string) *InputField[T] {
 	f.prependIcon = value
-	return f
-}
-
-func (f *InputField[T]) OnInput(h app.EventHandler) *InputField[T] {
-	f.onInput = h
 	return f
 }

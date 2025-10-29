@@ -33,25 +33,23 @@ func (i *indexPage) Render() app.UI {
 
 			components.NewInputField[string]().
 				Label("What is your name?").
-				Value(i.form.Name).
-				Rcv(&i.form.Name).
+				Value(&i.form.Name).
 				WrapClass("mt-4").
 				Clearable(true).
 				Required(true).
 				Autofocus(true).
 				PrependIcon("timer_1").
-				ID("name-field").
-				OnInput(i.ValueTo(&i.form.Name)),
+				ID("name-field"),
+
+			app.Span().Text(i.form.Name),
 
 			components.NewInputField[string]().
 				Label("What is your surname?").
-				Value(i.form.Surname).
-				Rcv(&i.form.Surname).
+				Value(&i.form.Surname).
 				Clearable(true).
 				Required(true).
 				PrependIcon("timer_2").
-				ID("surname-field").
-				OnInput(i.ValueTo(&i.form.Surname)),
+				ID("surname-field"),
 
 			/* 			app.Label().
 			   				For("name-field1").
