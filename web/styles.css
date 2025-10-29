@@ -1,0 +1,26 @@
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 1,
+  'wght' 300,
+  'GRAD' -25,
+  'opsz' 48
+}
+
+body{
+    background-color: rgb(237, 230, 230);
+    padding: 50px;
+}
+
+.text-warning {
+    color: #F58B05;
+}
+.btn-primary {
+    --bs-btn-bg: #6610f2!important;
+    --bs-btn-border-color: #6610f2!important;
+    --bs-btn-hover-bg: #6610f2!important;
+    --bs-btn-hover-border-color: #6610f2!important;
+    --bs-btn-active-bg:#6610f2!important;
+    --bs-btn-active-border-color: #6610f2!important;
+    --bs-btn-disabled-bg: #a274eb!important;
+    --bs-btn-disabled-border-color: #a274eb!important;
+}

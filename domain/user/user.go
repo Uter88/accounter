@@ -29,3 +29,19 @@ func (u *User) IsValid() bool {
 func (u *User) Reset() {
 	u = &User{}
 }
+
+// Reflex
+func (u *User) ResetField(field string) {
+	switch field {
+	case "name":
+		u.Name = ""
+	case "surname":
+		u.Surname = ""
+	case "patronymic":
+		u.Patronymic = ""
+	case "login":
+		u.Login = ""
+	case "password":
+		u.Password = ""
+	}
+}
