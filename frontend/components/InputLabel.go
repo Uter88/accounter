@@ -7,9 +7,10 @@ import (
 type InputLabel struct {
 	app.Compo
 
-	inputID  string
-	text     string
-	required bool
+	inputID    string
+	text       string
+	required   bool
+	labelClass string
 }
 
 func NewInputLabel(text, inputID string) *InputLabel {
@@ -19,6 +20,11 @@ func NewInputLabel(text, inputID string) *InputLabel {
 func (l *InputLabel) Required(v bool) *InputLabel {
 	l.required = v
 	return l
+}
+
+func (f *InputLabel) LabelClass(c string) *InputLabel {
+	f.labelClass = c
+	return f
 }
 
 func (l *InputLabel) Render() app.UI {
@@ -31,5 +37,5 @@ func (l *InputLabel) Render() app.UI {
 	return app.Label().
 		For(l.inputID).
 		Text(text).
-		Class("text-secondary")
+		Class("text-secondary", l.labelClass)
 }

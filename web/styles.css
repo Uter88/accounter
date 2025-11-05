@@ -6,14 +6,19 @@
   'opsz' 48
 }
 
+
 body{
     background-color: rgb(237, 230, 230);
-    padding: 50px;
 }
 
 .text-warning {
-    color: #F58B05;
+    color: #dc6300!important;
 }
+
+.btn-flat.btn {
+padding: 0!important;
+}
+
 .btn-primary {
     --bs-btn-bg: #6610f2!important;
     --bs-btn-border-color: #6610f2!important;
@@ -23,4 +28,25 @@ body{
     --bs-btn-active-border-color: #6610f2!important;
     --bs-btn-disabled-bg: #a274eb!important;
     --bs-btn-disabled-border-color: #a274eb!important;
+}
+
+.login-form{
+    padding: 50px;
+    background-color: rgb(236 226 226);
+    border-radius: 0 25px 25px 0;
+    min-height: 700px;
+}
+
+.login-page{
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    border-radius: 0 15px 15px 0;
+    background-image: url("../web/icons/bg/login2.jpg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover; 
+    width: 65vw;
+}
+
+.text-bold{
+    font-weight: 600;
 }

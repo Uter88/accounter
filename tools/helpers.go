@@ -3,6 +3,9 @@ package tools
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"regexp"
+	"strings"
 )
 
 func IsEmpty(v any) bool {
@@ -35,6 +38,10 @@ func IsEmpty(v any) bool {
 		return tp == 0
 	case *float64:
 		return *tp == 0
+	case bool:
+		return !tp
+	case *bool:
+		return !*tp
 
 	default:
 		return false
@@ -91,4 +98,25 @@ func ToJSON(data any) *bytes.Buffer {
 	json.NewEncoder(buf).Encode(data)
 
 	return buf
+}
+
+func ClearEmail(email string) string {
+	reqex := "[0-9A-Za-z_@.^\t\n\f\r]"
+
+	r := regexp.MustCompile(reqex)
+	arr := r.FindAllString(email, -1)
+	result := strings.Join(arr, "")
+
+	return result
+}
+
+func ValidEmail(email string) error {
+	pattern := `^(([^<>()\\[\]\\.,;:\s@"]+(\.[^<>()\\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$`
+	reg := regexp.MustCompile(pattern)
+
+	if reg.MatchString(email) {
+		return nil
+	}
+
+	return errors.New("invalid email")
 }

@@ -30,7 +30,8 @@ func NewApp(config config.Config, logger config.Logger) App {
 
 func (a *App) Run(ctx context.Context) error {
 	app.Route("/login", func() app.Composer { return pages.NewLoginPage(a.ctx) })
-	app.Route("/index", func() app.Composer { return pages.NewIndexPage(a.ctx) })
+	app.Route("/registration", func() app.Composer { return pages.NewRegistrationPage(a.ctx) })
+	app.Route("/list", func() app.Composer { return pages.NewListPage(a.ctx) })
 	app.RunWhenOnBrowser()
 
 	serv := &http.Server{
@@ -44,9 +45,9 @@ func (a *App) Run(ctx context.Context) error {
 			Name: "Accounter",
 			Icon: app.Icon{
 				Default: "/web/icons/favorite.png",
-				SVG:     "/web/icons/favorite.svg",
+				SVG:     "/web/icons/logo-bg.svg",
 			},
-			Title:       "Accounter application",
+			Title:       "AccApp",
 			Description: "Accounter application",
 			Styles: []string{
 				"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
