@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"accounter/adapters"
-	"accounter/backend/core"
 	"fmt"
 	"net/http"
 	"strings"
@@ -11,11 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Try to authorize CurrentUser and put it to context
 func (v1 *v1Engine) userAuthentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		mgr := core.NewAuthService(adapters.NewUserRepository(c, v1.DbClient))
+		service := v1.getAuthService(c)
 
-		if user, err := mgr.TokenAuthorization(c, v1.Config); err != nil {
+		if user, err := service.LoginByToken(c, v1.Config); err != nil {
 			v1.writeErr(c, http.StatusUnauthorized, err)
 
 		} else {
@@ -26,6 +25,7 @@ func (v1 *v1Engine) userAuthentication() gin.HandlerFunc {
 	}
 }
 
+// Log request
 func (v1 *v1Engine) logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()

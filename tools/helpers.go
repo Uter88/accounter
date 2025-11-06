@@ -2,10 +2,8 @@ package tools
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
-	"errors"
-	"regexp"
-	"strings"
 )
 
 func IsEmpty(v any) bool {
@@ -100,23 +98,12 @@ func ToJSON(data any) *bytes.Buffer {
 	return buf
 }
 
-func ClearEmail(email string) string {
-	reqex := "[0-9A-Za-z_@.^\t\n\f\r]"
+func IsNotFoundError(err error) bool {
+	switch err {
+	case sql.ErrNoRows:
+		return true
 
-	r := regexp.MustCompile(reqex)
-	arr := r.FindAllString(email, -1)
-	result := strings.Join(arr, "")
-
-	return result
-}
-
-func ValidEmail(email string) error {
-	pattern := `^(([^<>()\\[\]\\.,;:\s@"]+(\.[^<>()\\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$`
-	reg := regexp.MustCompile(pattern)
-
-	if reg.MatchString(email) {
-		return nil
+	default:
+		return false
 	}
-
-	return errors.New("invalid email")
 }

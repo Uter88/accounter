@@ -1,19 +1,36 @@
 package store
 
 import (
+	v1 "accounter/backend/server/handlers/v1"
 	"accounter/config"
+	"accounter/domain/user"
+	"accounter/tools"
 	"fmt"
 )
 
 type baseStore struct {
-	api string
+	api  string
+	user user.CurrentUser
 }
 
-func (s *baseStore) getApi(path string) string {
-	return fmt.Sprintf("%s/%s", s.api, path)
+func (b *baseStore) SetUser(user user.CurrentUser) {
+	b.user = user
+}
+
+func newRequest[R any](s baseStore) tools.Request[v1.Response[R]] {
+	params := tools.NewRequest[v1.Response[R]](s.api)
+
+	if s.user.IsAuthorized {
+		params = params.Headers(map[string]string{
+			"Authorization": s.user.Tokens.AccessToken,
+		})
+	}
+
+	return params
 }
 
 type Store struct {
+	baseStore
 	mainStore
 	tasksStore
 	usersStore
@@ -25,6 +42,7 @@ func NewStore(cfg config.Config) *Store {
 	}
 
 	s := &Store{
+		baseStore:  base,
 		mainStore:  mainStore{baseStore: base},
 		usersStore: usersStore{baseStore: base},
 		tasksStore: tasksStore{baseStore: base},

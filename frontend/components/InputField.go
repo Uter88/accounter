@@ -37,7 +37,7 @@ type InputField[T InputValue] struct {
 	loaded bool
 
 	formater  func(v string) string
-	validator func(v string) error
+	validator func(ctx app.Context, v string) error
 }
 
 func NewInputField[T InputValue]() *InputField[T] {
@@ -99,7 +99,7 @@ func (f *InputField[T]) onInput(ctx app.Context, e app.Event) {
 	if f.validator != nil {
 		val := ctx.JSSrc().Get("value")
 
-		if err := f.validator(val.String()); err != nil {
+		if err := f.validator(ctx, val.String()); err != nil {
 			f.err = err
 		}
 	}
@@ -122,7 +122,7 @@ func (f *InputField[T]) Formater(fn func(string) string) *InputField[T] {
 	return f
 }
 
-func (f *InputField[T]) Validator(fn func(string) error) *InputField[T] {
+func (f *InputField[T]) Validator(fn func(app.Context, string) error) *InputField[T] {
 	f.validator = fn
 	return f
 }

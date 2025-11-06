@@ -1,10 +1,10 @@
 package pages
 
 import (
-	"accounter/domain/user"
 	"accounter/frontend/common"
 	"accounter/frontend/components"
-	"log"
+	"accounter/tools"
+	"errors"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -12,7 +12,7 @@ import (
 type registrationPage struct {
 	common.BaseComponent
 
-	form user.User
+	form loginForm
 }
 
 func NewRegistrationPage(ctx common.AppContext) *registrationPage {
@@ -78,6 +78,20 @@ func (i *registrationPage) Render() app.UI {
 							Clearable(true).
 							Required(true).
 							PrependIcon("alternate_email").
+							Validator(func(ctx app.Context, s string) error {
+								if err := tools.ValidEmail(s); err != nil {
+									return err
+								}
+
+								if ok, err := i.Ctx.Store.CheckUniqueLogin(s); err != nil {
+									i.ShowNotification(ctx, "Error", err.Error())
+									return err
+								} else if ok {
+									return errors.New("user with this login is exists")
+								}
+
+								return nil
+							}).
 							ID("login-field"),
 
 						components.NewInputField[string]().
@@ -118,8 +132,13 @@ func (i *registrationPage) Render() app.UI {
 							Class("mt-3 btn btn-primary btn-lg").
 							Disabled(!i.form.IsValid(false)).
 							OnClick(func(ctx app.Context, e app.Event) {
-								if err := i.Ctx.Store.SaveUser(i.form); err != nil {
-									log.Println(err.Error())
+								if user, err := i.Ctx.Store.SaveUser(i.form.User); err != nil {
+									i.ShowNotification(ctx, "Error", err.Error())
+
+								} else if err := i.Ctx.Store.LoginByCredentials(user.Login, user.Password); err != nil {
+									i.ShowNotification(ctx, "Error", err.Error())
+								} else {
+									ctx.Navigate("/list")
 								}
 								i.form.Reset()
 							}),

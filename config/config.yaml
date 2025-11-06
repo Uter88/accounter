@@ -7,9 +7,6 @@ prod: &default
     port: 8001
     allow_origins:
       - http://localhost
-      - https://logistics.sputnik-monitor.ru
-      - https://logistics-dev.sputnik-monitor.ru
-      - https://packapi.sputnik-monitor.ru
     allow_headers:
       - Authorization
       - X-Requested-With
@@ -30,6 +27,7 @@ prod: &default
       - Content-Length
     max_age: 12h
   db:
+    driver: sqlite3
     dsn: database.sql
 dev: 
   <<: *default

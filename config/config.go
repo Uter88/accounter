@@ -15,16 +15,24 @@ import (
 //go:embed config.yaml
 var configFile []byte
 
+// Application config
 type Config struct {
-	DebugMode bool
-	AppMode   string
 
+	// Debug mode flag
+	DebugMode bool
+
+	// Application mode: prod, dev, etc
+	AppMode string
+
+	// JWT secret key salt
 	SecretKey string `yaml:"secret_key"`
 
+	// Frontend config
 	Client struct {
 		Port uint `yaml:"port"`
 	} `yaml:"client"`
 
+	// Backend HTTP config
 	HTTP struct {
 		Host             string        `yaml:"host"`
 		Port             uint          `yaml:"port"`
@@ -36,11 +44,15 @@ type Config struct {
 		ExposeHeaders    []string      `yaml:"expose_headers"`
 		MaxAge           time.Duration `yaml:"max_age"`
 	} `yaml:"http"`
+
+	// Database config
 	DB struct {
-		DSN string `yaml:"dsn"`
+		Driver string `yaml:"driver"`
+		DSN    string `yaml:"dsn"`
 	} `yaml:"db"`
 }
 
+// InitConfig parse args and load config from YAML file
 func InitConfig() (cfg Config) {
 	flag.BoolVar(&cfg.DebugMode, "debug", true, "Debug mode")
 	flag.StringVar(&cfg.AppMode, "mode", "dev", "App mode")
@@ -66,6 +78,7 @@ func InitConfig() (cfg Config) {
 	return
 }
 
+// InitGracefulShutdownCtx creates graceful shutdown context and cancel function
 func InitGracefulShutdownCtx() (context.Context, context.CancelFunc) {
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT,

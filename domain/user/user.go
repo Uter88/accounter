@@ -4,6 +4,7 @@ import (
 	"accounter/tools"
 )
 
+// User model
 type User struct {
 	ID           int64   `db:"id,omitempty" json:"id"`
 	Login        string  `db:"login" json:"login"`
@@ -12,10 +13,9 @@ type User struct {
 	Surname      string  `db:"surname" json:"surname"`
 	Patronymic   string  `db:"patronymic" json:"patronymic"`
 	PricePerHour float32 `db:"price_per_hour" json:"price_per_hour"`
-	IsAccept     bool    `json:"is_accept"`
-	IsRemember   bool    `json:"is_remember"`
 }
 
+// IsValid check for User data is valid
 func (u *User) IsValid(isAuth bool) bool {
 	if err := tools.ValidEmail(u.Login); err != nil {
 		return false
@@ -26,7 +26,7 @@ func (u *User) IsValid(isAuth bool) bool {
 			return false
 		}
 	} else {
-		if u.IsAccept || tools.IsSomeEmpty(u.Login, u.Password, u.Name, u.Surname, u.Patronymic) {
+		if tools.IsSomeEmpty(u.Login, u.Password, u.Name, u.Surname, u.Patronymic) {
 			return false
 		}
 
@@ -38,6 +38,7 @@ func (u *User) IsValid(isAuth bool) bool {
 	return true
 }
 
+// Reset reset User data
 func (u *User) Reset() {
 	u = &User{}
 }

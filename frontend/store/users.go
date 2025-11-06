@@ -1,9 +1,9 @@
 package store
 
 import (
-	v1 "accounter/backend/server/handlers/v1"
 	"accounter/domain/user"
 	"accounter/tools"
+	"net/http"
 )
 
 type usersStore struct {
@@ -11,23 +11,29 @@ type usersStore struct {
 	users []user.User
 }
 
-func (s *usersStore) SaveUser(u user.User) error {
-	api := s.getApi("users/save")
+func (s *usersStore) SaveUser(u user.User) (user.User, error) {
+	request := newRequest[user.User](s.baseStore).
+		Path("users/save").
+		Method(http.MethodPost).
+		Data(tools.ToJSON(u))
 
-	resp, _, err := tools.MakeJSONRequest[v1.Response[user.User], any]("POST", api, tools.ToJSON(u))
+	resp, _, err := request.Do()
 
 	if err != nil {
-		return err
+		return u, err
 	}
 
-	s.UpdateUser(resp.Data)
-	return nil
+	result := resp.Data
+
+	s.UpdateUser(result)
+	return result, nil
 }
 
 func (s *usersStore) RequestUsers() error {
-	api := s.getApi("users/list")
+	request := newRequest[[]user.User](s.baseStore).
+		Path("users/list")
 
-	resp, _, err := tools.MakeJSONRequest[v1.Response[[]user.User], any]("GET", api, nil)
+	resp, _, err := request.Do()
 
 	if err != nil {
 		return err
@@ -36,6 +42,20 @@ func (s *usersStore) RequestUsers() error {
 	s.users = resp.Data
 
 	return nil
+}
+
+func (s *usersStore) CheckUniqueLogin(login string) (bool, error) {
+	request := newRequest[bool](s.baseStore).
+		Path("users/is_exists").
+		Param("login", login)
+
+	resp, _, err := request.Do()
+
+	if err != nil {
+		return false, err
+	}
+
+	return resp.Data, nil
 }
 
 func (s *usersStore) GetUsers() []user.User {

@@ -12,7 +12,25 @@ import (
 type loginPage struct {
 	common.BaseComponent
 
-	form user.User
+	form loginForm
+}
+
+type loginForm struct {
+	user.User
+	IsRemember bool
+	IsAccept   bool
+}
+
+func (f *loginForm) isValid(isAuth bool) bool {
+	if !f.IsValid(isAuth) {
+		return false
+	}
+
+	if !isAuth && !f.IsAccept {
+		return false
+	}
+
+	return true
 }
 
 func NewLoginPage(ctx common.AppContext) *loginPage {
@@ -52,7 +70,9 @@ func (i *loginPage) Render() app.UI {
 								Required(true).
 								PrependIcon("alternate_email").
 								Formater(tools.ClearEmail).
-								Validator(tools.ValidEmail).
+								Validator(func(ctx app.Context, s string) error {
+									return tools.ValidEmail(s)
+								}).
 								ID("login-field"),
 
 							components.NewInputField[string]().
@@ -73,11 +93,16 @@ func (i *loginPage) Render() app.UI {
 
 							app.Button().
 								Text("Sign In").
+								Type("button").
 								Class("mt-5 btn btn-primary btn-lg").
-								Disabled(!i.form.IsValid(true)).
+								Disabled(!i.form.isValid(true)).
 								OnClick(func(ctx app.Context, e app.Event) {
-									i.form.Reset()
-									ctx.Navigate("/list")
+									if err := i.Ctx.Store.LoginByCredentials(i.form.Login, i.form.Password); err != nil {
+										i.ShowNotification(ctx, "Error", err.Error())
+									} else {
+										i.form.Reset()
+										ctx.Navigate("/list")
+									}
 								}),
 
 							app.Raw(`
