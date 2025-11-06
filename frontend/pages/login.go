@@ -1,9 +1,9 @@
 package pages
 
 import (
-	"accounter/domain/user"
 	"accounter/frontend/common"
 	"accounter/frontend/components"
+	"accounter/frontend/models"
 	"accounter/tools"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -12,25 +12,9 @@ import (
 type loginPage struct {
 	common.BaseComponent
 
-	form loginForm
-}
+	form models.LoginForm
 
-type loginForm struct {
-	user.User
-	IsRemember bool
-	IsAccept   bool
-}
-
-func (f *loginForm) isValid(isAuth bool) bool {
-	if !f.IsValid(isAuth) {
-		return false
-	}
-
-	if !isAuth && !f.IsAccept {
-		return false
-	}
-
-	return true
+	loaded bool
 }
 
 func NewLoginPage(ctx common.AppContext) *loginPage {
@@ -39,7 +23,21 @@ func NewLoginPage(ctx common.AppContext) *loginPage {
 	}
 }
 
+func (i *loginPage) OnMount(ctx app.Context) {
+	if i.Ctx.Store.CheckAuth(ctx) {
+		user := i.Ctx.Store.GetUser()
+
+		i.form.Login = user.Login
+		i.form.Password = user.Password
+	}
+	i.loaded = true
+}
+
 func (i *loginPage) Render() app.UI {
+	return app.If(i.loaded, i.El).Else(func() app.UI { return app.Span() })
+}
+
+func (i *loginPage) El() app.UI {
 	return app.Div().
 		Style("height", "100vh").
 		Class("d-flex flex-row align-items-center w-100").
@@ -95,9 +93,9 @@ func (i *loginPage) Render() app.UI {
 								Text("Sign In").
 								Type("button").
 								Class("mt-5 btn btn-primary btn-lg").
-								Disabled(!i.form.isValid(true)).
+								Disabled(!i.form.Validate(true)).
 								OnClick(func(ctx app.Context, e app.Event) {
-									if err := i.Ctx.Store.LoginByCredentials(i.form.Login, i.form.Password); err != nil {
+									if err := i.Ctx.Store.LoginByCredentials(ctx, i.form); err != nil {
 										i.ShowNotification(ctx, "Error", err.Error())
 									} else {
 										i.form.Reset()
@@ -114,4 +112,5 @@ func (i *loginPage) Render() app.UI {
 								</a>
 							`),
 						)))
+
 }

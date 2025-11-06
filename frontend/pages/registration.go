@@ -3,6 +3,7 @@ package pages
 import (
 	"accounter/frontend/common"
 	"accounter/frontend/components"
+	"accounter/frontend/models"
 	"accounter/tools"
 	"errors"
 
@@ -12,7 +13,7 @@ import (
 type registrationPage struct {
 	common.BaseComponent
 
-	form loginForm
+	form models.LoginForm
 }
 
 func NewRegistrationPage(ctx common.AppContext) *registrationPage {
@@ -130,12 +131,12 @@ func (i *registrationPage) Render() app.UI {
 						app.Button().
 							Text("Save").
 							Class("mt-3 btn btn-primary btn-lg").
-							Disabled(!i.form.IsValid(false)).
+							Disabled(!i.form.Validate(false)).
 							OnClick(func(ctx app.Context, e app.Event) {
-								if user, err := i.Ctx.Store.SaveUser(i.form.User); err != nil {
+								if _, err := i.Ctx.Store.SaveUser(i.form.User); err != nil {
 									i.ShowNotification(ctx, "Error", err.Error())
 
-								} else if err := i.Ctx.Store.LoginByCredentials(user.Login, user.Password); err != nil {
+								} else if err := i.Ctx.Store.LoginByCredentials(ctx, i.form); err != nil {
 									i.ShowNotification(ctx, "Error", err.Error())
 								} else {
 									ctx.Navigate("/list")

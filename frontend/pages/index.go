@@ -3,7 +3,6 @@ package pages
 import (
 	"accounter/frontend/common"
 	"accounter/frontend/components"
-	"fmt"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -18,8 +17,8 @@ func NewIndexPage(ctx common.AppContext) *indexPage {
 	}
 }
 
-func (inp *indexPage) requestUsers(ctx app.Context, e app.Event) {
-	inp.EnableNotifications(ctx, e)
+func (inp *indexPage) requestUsers(ctx app.Context) {
+	inp.EnableNotifications(ctx)
 
 	if err := inp.Ctx.Store.RequestUsers(); err != nil {
 		inp.ShowNotification(ctx, "Error", err.Error())
@@ -29,12 +28,12 @@ func (inp *indexPage) requestUsers(ctx app.Context, e app.Event) {
 }
 
 func (inp *indexPage) OnMount(ctx app.Context) {
-	fmt.Println("component mounted")
+	if !inp.Ctx.Store.CheckAuth(ctx) {
+		ctx.Navigate("/login")
+		return
+	}
 
-	e := app.Event{}
-	inp.requestUsers(ctx, e)
-	fmt.Println(inp.Ctx.Store.GetUsers())
-
+	inp.requestUsers(ctx)
 }
 
 func (inp *indexPage) GroupBtn() app.HTMLDiv {
@@ -43,12 +42,12 @@ func (inp *indexPage) GroupBtn() app.HTMLDiv {
 		Style("width", "auto").
 		Text("reload").
 		OnClick(func(ctx app.Context, e app.Event) {
-			inp.requestUsers(ctx, e)
+			inp.requestUsers(ctx)
 		})
 
 	btnIcon := components.NewBtnIcon().
 		OnClick(func(ctx app.Context, e app.Event) {
-			ctx.Navigate("/login")
+			inp.Ctx.Store.Logout(ctx)
 		})
 
 	btnGroup := app.Div().

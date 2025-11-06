@@ -23,7 +23,7 @@ func (h *BaseComponent) OnMount(ctx app.Context) {
 	h.notificationPermission = ctx.Notifications().Permission()
 }
 
-func (h *BaseComponent) EnableNotifications(ctx app.Context, e app.Event) {
+func (h *BaseComponent) EnableNotifications(ctx app.Context) {
 	h.notificationPermission = ctx.Notifications().RequestPermission()
 }
 

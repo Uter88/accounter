@@ -7,12 +7,12 @@ import (
 )
 
 type usersStore struct {
-	baseStore
+	*baseStore
 	users user.Users
 }
 
 func (s *usersStore) SaveUser(u user.User) (user.User, error) {
-	request := newRequest[user.User](s.baseStore).
+	request := newRequest[user.User](*s.baseStore).
 		Path("users/save").
 		Method(http.MethodPost).
 		Data(tools.ToJSON(u))
@@ -30,7 +30,7 @@ func (s *usersStore) SaveUser(u user.User) (user.User, error) {
 }
 
 func (s *usersStore) RequestUsers() error {
-	request := newRequest[[]user.User](s.baseStore).
+	request := newRequest[[]user.User](*s.baseStore).
 		Path("users/list")
 
 	resp, _, err := request.Do()
@@ -45,7 +45,7 @@ func (s *usersStore) RequestUsers() error {
 }
 
 func (s *usersStore) CheckUniqueLogin(login string) (bool, error) {
-	request := newRequest[bool](s.baseStore).
+	request := newRequest[bool](*s.baseStore).
 		Path("users/is_exists").
 		Param("login", login)
 
