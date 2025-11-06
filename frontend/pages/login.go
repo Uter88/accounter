@@ -77,7 +77,7 @@ func (i *loginPage) Render() app.UI {
 								Disabled(!i.form.IsValid(true)).
 								OnClick(func(ctx app.Context, e app.Event) {
 									i.form.Reset()
-									ctx.Navigate("/list")
+									ctx.Navigate("/index")
 								}),
 
 							app.Raw(`

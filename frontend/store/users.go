@@ -8,7 +8,7 @@ import (
 
 type usersStore struct {
 	baseStore
-	users []user.User
+	users user.Users
 }
 
 func (s *usersStore) SaveUser(u user.User) error {
@@ -27,7 +27,7 @@ func (s *usersStore) SaveUser(u user.User) error {
 func (s *usersStore) RequestUsers() error {
 	api := s.getApi("users/list")
 
-	resp, _, err := tools.MakeJSONRequest[v1.Response[[]user.User], any]("GET", api, nil)
+	resp, _, err := tools.MakeJSONRequest[v1.Response[user.Users], any]("GET", api, nil)
 
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func (s *usersStore) RequestUsers() error {
 	return nil
 }
 
-func (s *usersStore) GetUsers() []user.User {
+func (s *usersStore) GetUsers() user.Users {
 	return s.users
 }
 

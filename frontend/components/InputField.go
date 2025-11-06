@@ -221,7 +221,7 @@ func (f *InputField[T]) render(input app.HTMLInput) app.UI {
 			Body(
 				app.If(!tools.IsEmptyValue(f.prependIcon), func() app.UI {
 					return app.Div().Class("input-group-prepend").Body(
-						NewIcon(f.prependIcon).Class("input-group-text"),
+						NewIcon(f.prependIcon, "").Class("input-group-text"),
 					)
 				}),
 
@@ -231,7 +231,7 @@ func (f *InputField[T]) render(input app.HTMLInput) app.UI {
 				// Clear icon
 				app.If(f.clearable && !tools.IsEmpty(f.Val), func() app.UI {
 					return app.Div().Class("input-group-append").Body(
-						NewIcon("close").
+						NewIcon("close", "").
 							Class("input-group-text").
 							El().
 							Role("button").
