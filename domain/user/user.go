@@ -4,6 +4,8 @@ import (
 	"accounter/tools"
 )
 
+type Users []User
+
 // User model
 type User struct {
 	ID           int64   `db:"id,omitempty" json:"id"`

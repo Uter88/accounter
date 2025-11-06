@@ -8,7 +8,7 @@ import (
 
 type usersStore struct {
 	baseStore
-	users []user.User
+	users user.Users
 }
 
 func (s *usersStore) SaveUser(u user.User) (user.User, error) {

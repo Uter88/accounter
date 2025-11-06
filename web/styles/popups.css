@@ -1,0 +1,49 @@
+/*TOOLTIP*/
+.custom-tooltip {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+    align-self: center;
+}
+
+.custom-tooltip-text{  
+    visibility: hidden; 
+    width: auto;
+    text-transform: lowercase;
+    text-wrap: nowrap;
+    background-color: #80858B;
+    color: white;
+    text-align: center;
+    padding: 3px 7px;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+}
+
+.custom-tooltip-text p:first-letter {
+  text-transform: uppercase !important;
+}
+
+.custom-tooltip-text p {
+  margin: 0;
+}
+
+.custom-tooltip:hover .custom-tooltip-text {
+  visibility: visible!important;
+}
+
+.tooltip-left{
+    left: 80%;
+}
+
+.tooltip-top {
+    top: -120%;
+}
+
+.tooltip-bottom {
+    bottom: -120%;
+}

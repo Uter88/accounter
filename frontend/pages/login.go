@@ -101,7 +101,7 @@ func (i *loginPage) Render() app.UI {
 										i.ShowNotification(ctx, "Error", err.Error())
 									} else {
 										i.form.Reset()
-										ctx.Navigate("/list")
+										ctx.Navigate("/index")
 									}
 								}),
 
