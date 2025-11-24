@@ -29,7 +29,7 @@ func (e *v1Engine) RegisterRoutes(s *gin.Engine) {
 		GET("", e.loginByToken).
 		POST("", e.loginByCredentials)
 
-	//v1.Use(e.userAuthentication())
+	v1.Use(e.userAuthentication())
 	v1.Use(e.logger())
 
 	v1.Group("/users").

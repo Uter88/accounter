@@ -2,7 +2,7 @@ package adapter_sql
 
 import (
 	"accounter/domain/user"
-	"accounter/tools"
+	"accounter/pkg/tools"
 	"context"
 	"fmt"
 )
@@ -67,6 +67,7 @@ func (r *userRepository) Save(user *user.User) error {
 
 	if res, err := r.db().NamedExecContext(ctx, saveUserQuery, user); err != nil {
 		return err
+
 	} else if id, _ := res.LastInsertId(); id != 0 {
 		user.ID = id
 	}

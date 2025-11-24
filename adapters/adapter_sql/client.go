@@ -117,7 +117,7 @@ func (c *SQLClient) Migrate(ctx context.Context) error {
 			description TEXT,
 			work_begin INTEGER,
 			work_end INTEGER,
-			month INTEGER
+			date INTEGER
 		)
 	`
 

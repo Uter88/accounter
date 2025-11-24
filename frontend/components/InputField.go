@@ -1,7 +1,7 @@
 package components
 
 import (
-	"accounter/tools"
+	"accounter/pkg/tools"
 	"errors"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -31,7 +31,6 @@ type InputField[T InputValue] struct {
 	prependIcon string
 	readonly    bool
 	pattern     string
-	validCls    string
 	err         error
 
 	loaded bool
@@ -41,10 +40,23 @@ type InputField[T InputValue] struct {
 }
 
 func NewInputField[T InputValue]() *InputField[T] {
-	return &InputField[T]{tp: "text"}
+	return &InputField[T]{
+		tp:  "text",
+		Val: new(T),
+	}
+}
+
+func (i *InputField[T]) OnMount(ctx app.Context) {
+	ctx.Handle("reset", func(ctx app.Context, a app.Action) {
+		i.clear(ctx, app.Event{})
+	})
 }
 
 func (f *InputField[T]) Render() app.UI {
+	if !tools.IsEmpty(*f.Val) {
+		f.loaded = true
+	}
+
 	input := app.Input().
 		Type(f.tp).
 		ID(f.id).
@@ -208,42 +220,19 @@ func (f *InputField[T]) PrependIcon(value string) *InputField[T] {
 }
 
 func (f *InputField[T]) render(input app.HTMLInput) app.UI {
-	return app.Div().Class(f.wrapClass).Body(
+	return NewInputWrapper(f.id).
+		Label(f.label).
+		LabelClass(f.labelClass).
+		WrapperClass(f.wrapClass).
+		PrependIcon(f.prependIcon).
+		OnClear(f.clear).
+		Required(f.required).
+		Clearable(f.clearable && !tools.IsEmpty(f.Val)).
+		Wrap(input)
+}
 
-		// Label
-		app.If(!tools.IsEmptyValue(f.label), func() app.UI {
-			return NewInputLabel(f.label, f.id).Required(f.required).LabelClass(f.labelClass)
-		}),
-
-		// Content
-		app.Div().
-			Class("input-group").
-			Body(
-				app.If(!tools.IsEmptyValue(f.prependIcon), func() app.UI {
-					return app.Div().Class("input-group-prepend").Body(
-						NewIcon(f.prependIcon, "").Class("input-group-text"),
-					)
-				}),
-
-				// Input
-				input,
-
-				// Clear icon
-				app.If(f.clearable && !tools.IsEmpty(f.Val), func() app.UI {
-					return app.Div().Class("input-group-append").Body(
-						NewIcon("close", "").
-							Class("input-group-text").
-							El().
-							Role("button").
-							OnClick(func(ctx app.Context, e app.Event) {
-								ctx.JSSrc().Set("value", "")
-								f.onInput(ctx, e)
-								app.Window().GetElementByID(f.id).Set("value", *f.Val)
-							}),
-					)
-				}),
-
-				// app.Div().Class("invalid-feedback").Text("Invalid"),
-			),
-	)
+func (f *InputField[T]) clear(ctx app.Context, e app.Event) {
+	ctx.JSSrc().Set("value", "")
+	f.onInput(ctx, e)
+	app.Window().GetElementByID(f.id).Set("value", *f.Val)
 }

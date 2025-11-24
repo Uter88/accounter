@@ -11,8 +11,8 @@ func NewTaskService(repo TaskRepository) TaskService {
 }
 
 // Get Task list
-func (us *TaskService) GetTaskList() ([]Task, error) {
-	users, err := us.repo.GetList()
+func (us *TaskService) GetTaskList(params *TaskParams) ([]Task, error) {
+	users, err := us.repo.GetList(params)
 
 	return users, err
 }

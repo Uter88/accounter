@@ -4,15 +4,16 @@ import (
 	"accounter/frontend/common"
 	"accounter/frontend/components"
 	"accounter/frontend/models"
-	"accounter/tools"
+	"accounter/pkg/tools"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 type loginPage struct {
+	app.Compo
 	common.BaseComponent
 
-	form models.LoginForm
+	data models.LoginForm
 
 	loaded bool
 }
@@ -20,16 +21,16 @@ type loginPage struct {
 func NewLoginPage(ctx common.AppContext) *loginPage {
 	return &loginPage{
 		BaseComponent: common.NewBaseComponent(ctx),
+		data:          models.NewLoginForm(),
 	}
 }
 
 func (i *loginPage) OnMount(ctx app.Context) {
-	if i.Ctx.Store.CheckAuth(ctx) {
-		user := i.Ctx.Store.GetUser()
-
-		i.form.Login = user.Login
-		i.form.Password = user.Password
+	if login, password, ok := i.Ctx.Store.LoadAuthData(ctx); ok {
+		i.data.Login = login
+		i.data.Password = password
 	}
+
 	i.loaded = true
 }
 
@@ -62,7 +63,7 @@ func (i *loginPage) El() app.UI {
 
 							components.NewInputField[string]().
 								Label("Enter your login").
-								Value(&i.form.Login).
+								Value(&i.data.Login).
 								WrapClass("mt-5").
 								Clearable(true).
 								Required(true).
@@ -76,16 +77,16 @@ func (i *loginPage) El() app.UI {
 							components.NewInputField[string]().
 								Label("Enter your password").
 								Type("password").
-								Value(&i.form.Password).
+								Value(&i.data.Password).
 								WrapClass("mt-4").
 								Clearable(true).
 								Required(true).
 								PrependIcon("password").
 								ID("password-field"),
 
-							components.NewCheckboxField().
+							components.NewCheckboxField[bool]().
 								Label("Remember me").
-								Checked(&i.form.IsRemember).
+								Value(&i.data.IsRemember).
 								WrapClass("mt-4").
 								ID("remember-field"),
 
@@ -93,12 +94,13 @@ func (i *loginPage) El() app.UI {
 								Text("Sign In").
 								Type("button").
 								Class("mt-5 btn btn-primary btn-lg").
-								Disabled(!i.form.Validate(true)).
+								Disabled(!i.data.Validate(true)).
 								OnClick(func(ctx app.Context, e app.Event) {
-									if err := i.Ctx.Store.LoginByCredentials(ctx, i.form); err != nil {
+									if err := i.Ctx.Store.LoginByCredentials(ctx, i.data); err != nil {
 										i.ShowNotification(ctx, "Error", err.Error())
+
 									} else {
-										i.form.Reset()
+										i.data.Reset()
 										ctx.Navigate("/index")
 									}
 								}),

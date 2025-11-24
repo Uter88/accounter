@@ -11,7 +11,7 @@ func main() {
 	// Init graceful shutdown context
 	ctx, cancel := config.InitGracefulShutdownCtx()
 
-	// Init config
+	// Init application config
 	cfg := config.InitConfig()
 
 	// Create logger

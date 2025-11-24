@@ -25,7 +25,8 @@ type Config struct {
 	AppMode string
 
 	// JWT secret key salt
-	SecretKey string `yaml:"secret_key"`
+	SecretKey   string        `yaml:"secret_key"`
+	TokenExpire time.Duration `yam:"token_expire"`
 
 	// Frontend config
 	Client struct {

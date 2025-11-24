@@ -7,7 +7,7 @@ import (
 type Tooltip struct {
 	app.Compo
 
-	ttlText     string
+	text        string
 	class       string
 	ttlPosition string
 }
@@ -19,8 +19,8 @@ func NewTooltip() *Tooltip {
 	}
 }
 
-func (i *Tooltip) TooltipText(c string) *Tooltip {
-	i.ttlText = c
+func (i *Tooltip) Text(c string) *Tooltip {
+	i.text = c
 	return i
 }
 
@@ -34,17 +34,21 @@ func (i *Tooltip) AlignClass(c string) *Tooltip {
 	return i
 }
 
-func (i *Tooltip) TooltipEl() app.HTMLSpan {
+func (i *Tooltip) El(contents ...app.UI) app.HTMLSpan {
 	return app.Span().
-		Class(i.class, i.ttlPosition).
+		Class("custom-tooltip").
 		Body(
-			app.P().Text(i.ttlText),
+			app.Range(contents).Slice(func(i int) app.UI {
+				return contents[i]
+			}),
+
+			app.Span().
+				Class(i.class, i.ttlPosition).
+				Body(
+					app.P().Text(i.text),
+				),
 		)
 
-}
-
-func (i *Tooltip) El() app.HTMLSpan {
-	return i.TooltipEl()
 }
 
 func (i *Tooltip) Render() app.UI {

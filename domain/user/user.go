@@ -1,7 +1,8 @@
 package user
 
 import (
-	"accounter/tools"
+	"accounter/pkg/tools"
+	"fmt"
 )
 
 type Users []User
@@ -15,6 +16,10 @@ type User struct {
 	Surname      string  `db:"surname" json:"surname"`
 	Patronymic   string  `db:"patronymic" json:"patronymic"`
 	PricePerHour float32 `db:"price_per_hour" json:"price_per_hour"`
+}
+
+func (u *User) GetLabel() string {
+	return fmt.Sprintf("%s %.1s. %.1s.", u.Surname, u.Name, u.Patronymic)
 }
 
 // IsValid check for User data is valid
@@ -38,9 +43,4 @@ func (u *User) IsValid(isAuth bool) bool {
 	}
 
 	return true
-}
-
-// Reset reset User data
-func (u *User) Reset() {
-	u = &User{}
 }

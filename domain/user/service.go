@@ -1,6 +1,6 @@
 package user
 
-import "accounter/tools"
+import "accounter/pkg/tools"
 
 // User service
 type UserService struct {

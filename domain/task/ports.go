@@ -4,7 +4,7 @@ package task
 type TaskRepository interface {
 
 	// Get list of Task
-	GetList() ([]Task, error)
+	GetList(params *TaskParams) ([]Task, error)
 
 	// Get one Task
 	GetOne(id int64) (Task, error)

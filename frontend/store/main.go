@@ -3,7 +3,7 @@ package store
 import (
 	"accounter/domain/user"
 	"accounter/frontend/models"
-	"accounter/tools"
+	"accounter/pkg/tools"
 	"fmt"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -18,15 +18,9 @@ func (b *mainStore) CheckAuth(ctx app.Context) bool {
 		return true
 	}
 
-	var token string
+	token, ok := b.loadAccessToken(ctx)
 
-	if err := ctx.LocalStorage().Get("token", &token); err != nil {
-		if err = ctx.LocalStorage().Set("token", &token); err != nil {
-			return false
-		}
-	}
-
-	if token == "" {
+	if !ok {
 		return false
 	}
 
@@ -43,36 +37,34 @@ func (s *mainStore) LoginByCredentials(ctx app.Context, form models.LoginForm) e
 		"password": form.Password,
 	}
 
-	request := newRequest[user.CurrentUser](*s.baseStore).
+	resp, errResp, err := newRequest[user.CurrentUser](*s.baseStore).
 		Path("login").
 		Method("POST").
-		Data(data.ToJSON())
+		Data(data.ToJSON()).
+		Do()
 
-	resp, _, err := request.Do()
-
-	if err == nil {
-		s.SetUser(ctx, resp.Data, form.IsRemember)
+	if err != nil {
+		return fmt.Errorf("auth error, status: %s, error: %s", err.Error(), errResp.Error)
 	}
 
-	return err
+	s.SetUser(ctx, resp.Data, form.IsRemember)
+
+	return nil
 }
 
 func (s *mainStore) LoginByToken(ctx app.Context, token string) error {
-	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", token),
-	}
-
-	request := newRequest[user.CurrentUser](*s.baseStore).
+	resp, errResp, err := newRequest[user.CurrentUser](*s.baseStore).
 		Path("login").
-		Headers(headers)
+		Header("Authorization", fmt.Sprintf("Bearer %s", token)).
+		Do()
 
-	resp, _, err := request.Do()
-
-	if err == nil {
-		s.SetUser(ctx, resp.Data, false)
+	if err != nil {
+		return fmt.Errorf("auth error, status: %s, error: %s", err.Error(), errResp.Error)
 	}
 
-	return err
+	s.SetUser(ctx, resp.Data, false)
+
+	return nil
 }
 
 func (s *mainStore) Logout(ctx app.Context) {

@@ -29,9 +29,11 @@ func NewApp(config config.Config, logger config.Logger) App {
 }
 
 func (a *App) Run(ctx context.Context) error {
+	app.Route("/", func() app.Composer { return pages.NewDefaultPage(a.ctx) })
 	app.Route("/login", func() app.Composer { return pages.NewLoginPage(a.ctx) })
 	app.Route("/registration", func() app.Composer { return pages.NewRegistrationPage(a.ctx) })
 	app.Route("/index", func() app.Composer { return pages.NewIndexPage(a.ctx) })
+
 	app.RunWhenOnBrowser()
 
 	serv := &http.Server{
@@ -57,7 +59,8 @@ func (a *App) Run(ctx context.Context) error {
 				"/web/styles/components.css",
 			},
 			Scripts: []string{
-				"/web/main.js",
+				"/web/js/main.js",
+				"/web/js/echarts/echarts.min.js",
 				"https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js",
 			},
 		},

@@ -9,14 +9,15 @@ import (
 )
 
 type BaseComponent struct {
-	app.Compo
 	Ctx AppContext
 
 	notificationPermission app.NotificationPermission
 }
 
 func NewBaseComponent(ctx AppContext) BaseComponent {
-	return BaseComponent{Ctx: ctx}
+	return BaseComponent{
+		Ctx: ctx,
+	}
 }
 
 func (h *BaseComponent) OnMount(ctx app.Context) {
@@ -31,6 +32,7 @@ func (h *BaseComponent) ShowNotification(ctx app.Context, title, msg string) {
 	ctx.Notifications().New(app.Notification{
 		Title: title,
 		Body:  msg,
+		Icon:  "/web/icons/logo.svg",
 	})
 }
 

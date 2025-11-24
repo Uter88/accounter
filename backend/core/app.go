@@ -4,7 +4,6 @@ import (
 	"accounter/adapters/adapter_sql"
 	"accounter/config"
 	"context"
-	"log"
 )
 
 // Common application instance
@@ -85,9 +84,9 @@ func (a *App) launchTasks(ctx context.Context) *App {
 
 // Launch background task
 func (a *App) launchTask(ctx context.Context, name string, task task) {
-	log.Printf("Launch task: %s", name)
+	a.Logger.Infof("Launch task: %s", name)
 
 	if err := task.Run(ctx); err != nil {
-		log.Printf("Error launch task %s: %s\n", name, err.Error())
+		a.Logger.Fatalf("Error launch task %s: %s\n", name, err.Error())
 	}
 }

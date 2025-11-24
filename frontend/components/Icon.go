@@ -1,6 +1,8 @@
 package components
 
 import (
+	"accounter/pkg/tools"
+
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
@@ -14,13 +16,17 @@ type Icon struct {
 	alignTooltip string
 }
 
-func NewIcon(name, tooltip string) *Icon {
+func NewIcon(name string) *Icon {
 	return &Icon{
 		name:         name,
 		color:        "text-secondary",
-		tooltip:      tooltip,
 		alignTooltip: "tooltip-bottom",
 	}
+}
+
+func (i *Icon) Tooltip(t string) *Icon {
+	i.tooltip = t
+	return i
 }
 
 func (i *Icon) Color(c string) *Icon {
@@ -39,25 +45,17 @@ func (i *Icon) AlignClass(c string) *Icon {
 }
 
 func (i *Icon) El() app.HTMLSpan {
-	if i.tooltip != "" {
-		return app.Span().
-			Class("custom-tooltip").
-			Body(
-				app.Span().
-					Class("material-symbols-outlined", i.color, i.class).
-					Text(i.name),
+	icon := app.Span().
+		Class("material-symbols-outlined", i.color, i.class).
+		Text(i.name)
 
-				NewTooltip().
-					TooltipText(i.tooltip).
-					AlignClass(i.alignTooltip),
-			)
-
-	} else {
-		return app.Span().
-			Class("material-symbols-outlined", i.color, i.class).
-			Text(i.name)
-	}
-
+	return app.Span().Body(
+		app.If(!tools.IsEmpty(i.tooltip), func() app.UI {
+			return NewTooltip().Text(i.tooltip).AlignClass(i.alignTooltip).El(icon)
+		}).Else(func() app.UI {
+			return icon
+		}),
+	)
 }
 
 func (i *Icon) Render() app.UI {

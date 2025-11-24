@@ -4,9 +4,31 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
 )
 
+func ValOrNil(v any) any {
+	if IsEmpty(v) {
+		return nil
+	}
+
+	return v
+}
+
 func IsEmpty(v any) bool {
+	if v == nil {
+		return true
+	}
+
+	if reflect.ValueOf(v).Kind() == reflect.Ptr {
+		if reflect.ValueOf(v).IsNil() {
+			return true
+		}
+	}
+
 	switch tp := v.(type) {
 	case string:
 		return tp == ""
@@ -60,6 +82,16 @@ func IsSomeEmpty[T comparable](vals ...T) bool {
 	return false
 }
 
+func Stringify[T any](items ...T) string {
+	elems := make([]string, len(items))
+
+	for i := range items {
+		elems[i] = fmt.Sprintf("%v", items[i])
+	}
+
+	return strings.Join(elems, ",")
+}
+
 func PtrToValue(v any) any {
 	switch tp := v.(type) {
 	case *string:
@@ -106,4 +138,40 @@ func IsNotFoundError(err error) bool {
 	default:
 		return false
 	}
+}
+
+func PutToValue[T comparable](value string, dest *T) {
+	*dest = StringToValue[T](value)
+}
+
+func StringToValue[T comparable](value string) (res T) {
+	val := reflect.ValueOf(&res)
+	val = val.Elem()
+
+	switch val.Kind() {
+	case reflect.String:
+		val.SetString(value)
+
+	case reflect.Bool:
+		if v, err := strconv.ParseBool(value); err == nil {
+			val.SetBool(v)
+		}
+
+	case reflect.Float32, reflect.Float64:
+		if v, err := strconv.ParseFloat(value, 64); err == nil {
+			val.SetFloat(v)
+		}
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		if v, err := strconv.ParseInt(value, 10, 64); err == nil {
+			val.SetInt(v)
+		}
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		if v, err := strconv.ParseUint(value, 10, 64); err == nil {
+			val.SetUint(v)
+		}
+	}
+
+	return
 }

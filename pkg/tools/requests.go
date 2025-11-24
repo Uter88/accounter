@@ -21,6 +21,16 @@ func NewParams() Params {
 	}
 }
 
+func (p *Params) Merge(op Params) *Params {
+	for k, v := range op.values {
+		for i := range v {
+			p.values.Add(k, v[i])
+		}
+	}
+
+	return p
+}
+
 func (p *Params) Add(key string, value any) *Params {
 	p.values.Add(key, fmt.Sprintf("%v", value))
 	return p
@@ -71,15 +81,18 @@ func (p Request[R]) Param(key string, value any) Request[R] {
 }
 
 func (p Request[R]) Params(params Params) Request[R] {
-	for k, v := range params.values {
-		p.params.Add(k, v)
-	}
-
+	p.params.Merge(params)
 	return p
 }
 
 func (p Request[R]) Data(data io.Reader) Request[R] {
 	p.data = data
+
+	return p
+}
+
+func (p Request[R]) Header(key, value string) Request[R] {
+	p.headers[key] = value
 
 	return p
 }
@@ -117,7 +130,9 @@ func MakeJSONRequest[R, E any](method, url string, data io.Reader, headers ...ma
 	decoder := json.NewDecoder(response.Body)
 
 	if response.StatusCode != http.StatusOK {
-		decoder.Decode(&errResp)
+		if err = decoder.Decode(&errResp); err != nil {
+			return
+		}
 
 		err = errors.New(response.Status)
 	} else {
