@@ -1,18 +1,19 @@
 package pages
 
 import (
+	"accounter/domain/task"
 	"accounter/domain/user"
 	"accounter/frontend/common"
 	"accounter/frontend/components"
-	"log"
+	"accounter/frontend/models"
+	"math/rand/v2"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 type indexPage struct {
+	app.Compo
 	common.BaseComponent
-
-	form user.User
 }
 
 func NewIndexPage(ctx common.AppContext) *indexPage {
@@ -21,195 +22,157 @@ func NewIndexPage(ctx common.AppContext) *indexPage {
 	}
 }
 
-func (i *indexPage) Render() app.UI {
-	return app.Form().Style("width", "500px").Class("d-flex flex-column").
+func (inp *indexPage) requestUsers(ctx app.Context) {
+	inp.EnableNotifications(ctx)
+
+	if err := inp.Ctx.Store.RequestUsers(); err != nil {
+		inp.ShowNotification(ctx, "Error", err.Error())
+	} else {
+		inp.ShowNotification(ctx, "Info", "Users loaded success!")
+	}
+}
+
+func (inp *indexPage) requestTasks(ctx app.Context) {
+	inp.EnableNotifications(ctx)
+
+	if err := inp.Ctx.Store.RequestTasks(); err != nil {
+		inp.ShowNotification(ctx, "Error", err.Error())
+	} else {
+		inp.ShowNotification(ctx, "Info", "Tasks loaded success!")
+	}
+}
+
+func (inp *indexPage) OnMount(ctx app.Context) {
+	if !inp.Ctx.Store.CheckAuth(ctx) {
+		ctx.Navigate("/login")
+		return
+	}
+
+	inp.requestUsers(ctx)
+	inp.requestTasks(ctx)
+}
+
+func (inp *indexPage) GroupBtn() app.HTMLDiv {
+	btnIcon := components.NewBtnIcon("logout").
+		Text("Exit").
+		Tooltip("Exit from system").
+		OnClick(func(ctx app.Context, e app.Event) {
+			inp.Ctx.Store.Logout(ctx)
+		})
+
+	return app.Div().
 		Body(
-			app.Div().Class("d-flex flex-row align-items-center w-100").Body(
-				app.Span().Class("material-symbols-outlined", "text-warning").Text("crown"),
-				app.H5().Text("Registration").Class("px-1"),
-			),
+			btnIcon,
+		)
+}
 
-			// Name
+func (inp *indexPage) initChart(opts *models.ChartOptions) *components.Chart {
+	chart := components.NewChart("bar-chart").
+		Width("500px").
+		Height("400px").
+		SetOptions(opts).
+		Lazy(true)
 
-			components.NewInputField[string]().
-				Label("What is your name?").
-				Value(&i.form.Name).
-				WrapClass("mt-4").
-				Clearable(true).
-				Required(true).
-				Autofocus(true).
-				PrependIcon("timer_1").
-				ID("name-field"),
+	return chart
+}
 
-			app.Span().Text(i.form.Name),
+func getChartOptions() *models.ChartOptions {
+	var data = models.Array{5, 20, 36, 10, 10, 20}
 
-			components.NewInputField[string]().
-				Label("What is your surname?").
-				Value(&i.form.Surname).
-				Clearable(true).
-				Required(true).
-				PrependIcon("timer_2").
-				ID("surname-field"),
+	rand.Shuffle(len(data), func(i, j int) {
+		data[i], data[j] = data[j], data[i]
+	})
 
-			/* 			app.Label().
-			   				For("name-field1").
-			   				Text("* What is your name?").
-			   				Class("mt-4", "text-secondary"),
+	return models.NewChartOptions().
+		WithTitle("Bar chart").
+		WithLegend("sales").
+		WithXAxis(models.XAxis{Data: models.Array{"Shirts", "Cardigans", "Chiffons", "Pants", "Heels", "Socks"}}).
+		WithSeries(models.Series{Name: "sales", Type: "bar", Data: data})
+}
 
-			   			app.Div().
-			   				Class("input-group").
-			   				Body(
-			   					app.Div().Class("input-group-prepend").Body(
-			   						app.Span().Class("input-group-text", "material-symbols-outlined").ID("name").Text("timer_1"),
-			   					),
-			   					app.Input().
-			   						Type("text").
-			   						ID("name-field2").
-			   						Class("form-control").
-			   						Value(i.form.Name).
-			   						Placeholder("").
-			   						Attr("aria-label", "Username").
-			   						Attr("aria-describedby", "name").
-			   						AutoFocus(true).
-			   						OnInput(i.ValueTo(&i.form.Name)),
+func (inp *indexPage) Render() app.UI {
+	userForm := components.NewUserForm(inp.Ctx, false)
+	taskForm := components.NewTaskForm(inp.Ctx)
 
-			   					app.Div().Class("input-group-append").Body(
-			   						app.If(len(i.form.Name) > 0, func() app.UI {
-			   							return app.Span().Class("input-group-text", "material-symbols-outlined").Text("close").ID("close-name").
-			   								OnClick(func(ctx app.Context, e app.Event) {
-			   									i.form.ResetField("name")
-			   								})
-			   						}),
-			   					),
-			   				),
+	usersTable := components.NewUserList(inp.Ctx, inp.Ctx.Store.GetUsers()).
+		Loading(inp.Ctx.Store.GetUsersLoading()).
+		OnRequest(inp.requestUsers).
+		OnEdit(func(ctx app.Context, u user.User) {
+			ctx.NewActionWithValue("setUser", u)
+		}).
+		OnAdd(func(ctx app.Context) {
+			ctx.NewActionWithValue("setUser", user.User{})
+		})
 
-			   			app.Label().For("surname-field").Text("* What is your surname?").Class("mt-3", "text-secondary"),
-			   			app.Div().Class("input-group").Body(
-			   				app.Div().Class("input-group-prepend").Body(
-			   					app.Span().Class("input-group-text", "material-symbols-outlined").ID("surname").Text("timer_2"),
-			   				),
-			   				app.Input().
-			   					Type("text").
-			   					ID("surname-field").
-			   					Class("form-control").
-			   					Value(i.form.Surname).
-			   					Placeholder("").
-			   					Attr("aria-label", "Surname").
-			   					Attr("aria-describedby", "surname").
-			   					OnInput(i.ValueTo(&i.form.Surname)),
+	tasksTable := components.NewTaskList(inp.Ctx, inp.Ctx.Store.GetTasks()).
+		OnRequest(func(ctx app.Context, p *task.TaskParams) {
+			inp.Ctx.Store.SetTaskParams(p)
+			inp.requestTasks(ctx)
+		}).
+		OnEdit(func(ctx app.Context, t task.Task) {
+			ctx.NewActionWithValue("setTask", t)
+		}).
+		OnAdd(func(ctx app.Context) {
+			t := task.NewTask()
+			params := inp.Ctx.Store.GetTaskParams()
+			tasks := inp.Ctx.Store.GetTasks()
 
-			   				app.If(len(i.form.Surname) > 0, func() app.UI {
-			   					return app.Span().Class("input-group-text", "material-symbols-outlined").Text("close").ID("close-surname").
-			   						OnClick(func(ctx app.Context, e app.Event) {
-			   							i.form.ResetField("surname")
-			   						})
-			   				}),
-			   			),
+			t.SetDate(params.DateStart)
 
-			   			app.Label().For("patronymic-field").Text("What is your patronymic?").Class("mt-3", "text-secondary"),
-			   			app.Div().Class("input-group").Body(
-			   				app.Div().Class("input-group-prepend").Body(
-			   					app.Span().Class("input-group-text", "material-symbols-outlined").ID("patronymic").Text("timer_3"),
-			   				),
-			   				app.Input().
-			   					Type("text").
-			   					ID("patronymic-field").
-			   					Class("form-control").
-			   					Value(i.form.Patronymic).
-			   					Placeholder("").
-			   					Attr("aria-label", "Patronymic").
-			   					Attr("aria-describedby", "patronymic").
-			   					OnInput(i.ValueTo(&i.form.Patronymic)),
+			if len(params.Users) > 0 {
+				t.UserID = params.Users[0]
 
-			   				app.If(len(i.form.Patronymic) > 0, func() app.UI {
-			   					return app.Span().Class("input-group-text", "material-symbols-outlined").Text("close").ID("close-patr").
-			   						OnClick(func(ctx app.Context, e app.Event) {
-			   							i.form.ResetField("patronymic")
-			   						})
-			   				}),
-			   			),
+				if l := len(tasks); l > 0 && tasks[l-1].UserID == t.UserID {
+					t.SetDate(tasks[l-1].Date)
+				}
+			}
 
-			   			app.Label().For("login-field").Text("* Enter your login").Class("mt-3", "text-secondary"),
-			   			app.Div().Class("input-group").Body(
-			   				app.Div().Class("input-group-prepend").Body(
-			   					app.Span().Class("input-group-text", "material-symbols-outlined").ID("login").Text("alternate_email"),
-			   				),
-			   				app.Input().
-			   					Type("text").
-			   					ID("login-field").
-			   					Class("form-control").
-			   					Value(i.form.Login).
-			   					Placeholder("").
-			   					Attr("aria-label", "Login").
-			   					Attr("aria-describedby", "login").
-			   					OnInput(i.ValueTo(&i.form.Login)),
+			ctx.NewActionWithValue("setTask", t)
+		}).
+		OnDelete(func(ctx app.Context, t task.Task) {
+			if err := inp.Ctx.Store.RemoveTask(t); err != nil {
+				inp.ShowNotification(ctx, "Error", err.Error())
+			}
+		})
 
-			   				app.If(len(i.form.Login) > 0, func() app.UI {
-			   					return app.Span().Class("input-group-text", "material-symbols-outlined").Text("close").ID("close-login").
-			   						OnClick(func(ctx app.Context, e app.Event) {
-			   							i.form.ResetField("login")
-			   						})
-			   				}),
-			   			),
+	chart := inp.initChart(getChartOptions())
 
-			   			app.Label().For("password-field").Text("* Enter your password").Class("mt-3", "text-secondary"),
-			   			app.Div().Class("input-group").Body(
-			   				app.Div().Class("input-group-prepend").Body(
-			   					app.Span().Class("input-group-text", "material-symbols-outlined").ID("password").Text("password"),
-			   				),
-			   				app.Input().
-			   					Type("password").
-			   					ID("password-field").
-			   					Class("form-control").
-			   					Value(i.form.Password).
-			   					Placeholder("").
-			   					Attr("aria-label", "Password").
-			   					Attr("aria-describedby", "password").
-			   					OnInput(i.ValueTo(&i.form.Password)),
+	return app.Main().
+		Class("d-flex w-100 h-100 flex-column").
+		Body(
+			// Header
+			app.Header().
+				Class("d-flex flex-row w-100 py-2 px-3 justify-content-end").
+				Body(inp.GroupBtn()),
 
-			   				app.If(len(i.form.Password) > 0, func() app.UI {
-			   					return app.Span().Class("input-group-text", "material-symbols-outlined").Text("close").ID("close-passw").
-			   						OnClick(func(ctx app.Context, e app.Event) {
-			   							i.form.ResetField("password")
-			   						})
-			   				}),
-			   			),
+			// Body
+			app.Div().
+				Class("d-flex flex-row w-100 p-3").
+				Body(
+					app.Div().
+						Class("d-flex h-100 col-5 flex-column").
+						Body(
+							app.Div().
+								Class("card p-1 d-flex h-50 flex-column align-items-center mx-3").
+								Style("border", "1px solid red").
+								Body(userForm, usersTable),
 
-			   			app.Label().For("cost-field").Text("* What is your cost?").Class("mt-3", "text-secondary"),
-			   			app.Div().Class("input-group").Body(
-			   				app.Div().Class("input-group-prepend").Body(
-			   					app.Span().Class("input-group-text", "material-symbols-outlined").ID("cost").Text("currency_ruble"),
-			   				),
-			   				app.Input().
-			   					Type("number").
-			   					ID("cost-field").
-			   					Class("form-control").
-			   					Value(i.form.PricePerHour).
-			   					Placeholder("").
-			   					Attr("aria-label", "Cost").
-			   					Attr("aria-describedby", "cost").
-			   					Min(1).
-			   					OnInput(i.ValueTo(&i.form.PricePerHour)),
-			   			), */
+							app.Div().
+								Class("card p-1 d-flex h-50 flex-column align-items-center mt-3 mx-3").
+								Body(
+									components.NewBtnIcon("bar_chart").
+										OnClick(func(ctx app.Context, e app.Event) {
+											chart.SetOptions(getChartOptions()).Draw(ctx)
+										}),
 
-			app.Raw(`
-				<a class="mt-3 icon-link icon-link-hover link-success link-underline-success link-underline-opacity-25" href="#">
-				 I agree to the Terms of Service and Privacy Policy
-					<svg xmlns="http://www.w3.org/2000/svg" class="bi" viewBox="0 0 16 16" aria-hidden="true">
-						<path d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-					</svg>
-				</a>
-			`),
+									chart,
+								),
+						),
 
-			app.Button().
-				Text("Save").
-				Class("mt-3 btn btn-primary").
-				Disabled(!i.form.IsValid()).
-				OnClick(func(ctx app.Context, e app.Event) {
-					if err := i.Ctx.Store.SaveUser(i.form); err != nil {
-						log.Println(err.Error())
-					}
-					i.form.Reset()
-				}),
+					app.Div().
+						Class("card p-1 d-flex flex-column align-items-center h-100 mx-1").
+						Style("border", "1px solid red").
+						Body(taskForm, tasksTable),
+				),
 		)
 }

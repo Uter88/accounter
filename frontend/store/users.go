@@ -1,39 +1,83 @@
 package store
 
 import (
-	v1 "accounter/backend/server/handlers/v1"
 	"accounter/domain/user"
-	"accounter/tools"
+	"accounter/pkg/tools"
+	"fmt"
+	"net/http"
 )
 
 type usersStore struct {
-	baseStore
-	users []user.User
+	*baseStore
+	users   user.Users
+	loading bool
 }
 
-func (s *usersStore) SaveUser(u user.User) error {
-	api := s.getApi("users/save")
+func (s *usersStore) SaveUser(u user.User) (user.User, error) {
+	s.setLoading(true)
+	defer s.setLoading(false)
 
-	resp, _, err := tools.MakeJSONRequest[v1.Response[user.User], any]("POST", api, tools.ToJSON(u))
+	resp, errResp, err := newRequest[user.User](*s.baseStore).
+		Path("users/save").
+		Method(http.MethodPost).
+		Data(tools.ToJSON(u)).
+		Do()
 
 	if err != nil {
-		return err
+		return u, fmt.Errorf("error save user, status: %s, error: %s", err.Error(), errResp.Error)
 	}
 
-	s.UpdateUser(resp.Data)
-	return nil
+	result := resp.Data
+
+	s.RequestUsers()
+	return result, nil
 }
 
 func (s *usersStore) RequestUsers() error {
-	api := s.getApi("users/list")
+	s.setLoading(true)
+	defer s.setLoading(false)
 
-	resp, _, err := tools.MakeJSONRequest[v1.Response[[]user.User], any]("GET", api, nil)
+	resp, errResp, err := newRequest[[]user.User](*s.baseStore).
+		Path("users/list").
+		Do()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error request users, status: %s, error: %s", err.Error(), errResp.Error)
 	}
 
 	s.users = resp.Data
+
+	return nil
+}
+
+func (s *usersStore) CheckUniqueLogin(login string, id int64) (bool, error) {
+	s.setLoading(true)
+	defer s.setLoading(false)
+
+	resp, errResp, err := newRequest[bool](*s.baseStore).
+		Path("users/is_exists").
+		Param("login", login).
+		Param("id", id).
+		Do()
+
+	if err != nil {
+		return false, fmt.Errorf("error check login unique, status: %s, error: %s", err.Error(), errResp.Error)
+	}
+
+	return resp.Data, nil
+}
+
+func (s *usersStore) RemoveUser(u user.User) error {
+	_, errResp, err := newRequest[user.User](*s.baseStore).
+		Path(fmt.Sprintf("users/delete/%d", u.ID)).
+		Method(http.MethodDelete).
+		Do()
+
+	if err != nil {
+		return fmt.Errorf("error save task, status: %s, error: %s", err.Error(), errResp.Error)
+	}
+
+	s.RequestUsers()
 
 	return nil
 }
@@ -42,13 +86,10 @@ func (s *usersStore) GetUsers() []user.User {
 	return s.users
 }
 
-func (s *usersStore) UpdateUser(u user.User) {
-	for i := range s.users {
-		if s.users[i].ID == u.ID {
-			s.users[i] = u
-			return
-		}
-	}
+func (s *usersStore) setLoading(v bool) {
+	s.loading = v
+}
 
-	s.users = append(s.users, u)
+func (s *usersStore) GetUsersLoading() bool {
+	return s.loading
 }

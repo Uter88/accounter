@@ -1,9 +1,13 @@
 package user
 
 import (
-	"accounter/tools"
+	"accounter/pkg/tools"
+	"fmt"
 )
 
+type Users []User
+
+// User model
 type User struct {
 	ID           int64   `db:"id,omitempty" json:"id"`
 	Login        string  `db:"login" json:"login"`
@@ -11,37 +15,32 @@ type User struct {
 	Name         string  `db:"name" json:"name"`
 	Surname      string  `db:"surname" json:"surname"`
 	Patronymic   string  `db:"patronymic" json:"patronymic"`
-	PricePerHour float64 `db:"price_per_hour" json:"price_per_hour"`
+	PricePerHour float32 `db:"price_per_hour" json:"price_per_hour"`
 }
 
-func (u *User) IsValid() bool {
-	if tools.IsSomeEmpty(u.Login, u.Password, u.Name, u.Surname, u.Patronymic) {
+func (u *User) GetLabel() string {
+	return fmt.Sprintf("%s %.1s. %.1s.", u.Surname, u.Name, u.Patronymic)
+}
+
+// IsValid check for User data is valid
+func (u *User) IsValid(isAuth bool) bool {
+	if err := tools.ValidEmail(u.Login); err != nil {
 		return false
 	}
 
-	if tools.IsEmptyValue(u.PricePerHour) {
-		return false
+	if isAuth {
+		if tools.IsSomeEmpty(u.Login, u.Password) {
+			return false
+		}
+	} else {
+		if tools.IsSomeEmpty(u.Login, u.Password, u.Name, u.Surname, u.Patronymic) {
+			return false
+		}
+
+		if tools.IsEmptyValue(u.PricePerHour) {
+			return false
+		}
 	}
 
 	return true
-}
-
-func (u *User) Reset() {
-	u = &User{}
-}
-
-// Reflex
-func (u *User) ResetField(field string) {
-	switch field {
-	case "name":
-		u.Name = ""
-	case "surname":
-		u.Surname = ""
-	case "patronymic":
-		u.Patronymic = ""
-	case "login":
-		u.Login = ""
-	case "password":
-		u.Password = ""
-	}
 }

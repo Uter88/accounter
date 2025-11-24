@@ -13,16 +13,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// HTTP server
 type Server struct {
 	*core.App
 }
 
+// Creates new Server instance
 func NewServer(app *core.App) Server {
 	return Server{
 		App: app,
 	}
 }
 
+// Run HTTP server
 func (s *Server) Run(ctx context.Context) error {
 	if s.Config.DebugMode {
 		gin.SetMode(gin.DebugMode)

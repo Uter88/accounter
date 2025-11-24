@@ -29,8 +29,11 @@ func NewApp(config config.Config, logger config.Logger) App {
 }
 
 func (a *App) Run(ctx context.Context) error {
+	app.Route("/", func() app.Composer { return pages.NewDefaultPage(a.ctx) })
 	app.Route("/login", func() app.Composer { return pages.NewLoginPage(a.ctx) })
+	app.Route("/registration", func() app.Composer { return pages.NewRegistrationPage(a.ctx) })
 	app.Route("/index", func() app.Composer { return pages.NewIndexPage(a.ctx) })
+
 	app.RunWhenOnBrowser()
 
 	serv := &http.Server{
@@ -44,16 +47,20 @@ func (a *App) Run(ctx context.Context) error {
 			Name: "Accounter",
 			Icon: app.Icon{
 				Default: "/web/icons/favorite.png",
-				SVG:     "/web/icons/favorite.svg",
+				SVG:     "/web/icons/logo-bg.svg",
 			},
-			Title:       "Accounter application",
+			Title:       "AccApp",
 			Description: "Accounter application",
 			Styles: []string{
 				"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
 				"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200",
-				"/web/styles.css",
+				"/web/styles/base.css",
+				"/web/styles/popups.css",
+				"/web/styles/components.css",
 			},
 			Scripts: []string{
+				"/web/js/main.js",
+				"/web/js/echarts/echarts.min.js",
 				"https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js",
 			},
 		},
