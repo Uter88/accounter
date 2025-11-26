@@ -1,5 +1,10 @@
 package task
 
+import (
+	"accounter/pkg/tools"
+	"bytes"
+)
+
 // Task service
 type TaskService struct {
 	repo TaskRepository
@@ -11,18 +16,22 @@ func NewTaskService(repo TaskRepository) TaskService {
 }
 
 // Get Task list
-func (us *TaskService) GetTaskList(params *TaskParams) ([]Task, error) {
-	users, err := us.repo.GetList(params)
+func (ts *TaskService) GetTaskList(params *TaskParams) ([]Task, error) {
+	users, err := ts.repo.GetList(params)
 
 	return users, err
 }
 
 // Save Task
-func (us *TaskService) SaveTask(user *Task) error {
-	return us.repo.Save(user)
+func (ts *TaskService) SaveTask(user *Task) error {
+	return ts.repo.Save(user)
 }
 
 // Delete Task by id
-func (us *TaskService) DeleteTask(id int64) error {
-	return us.repo.Delete(id)
+func (ts *TaskService) DeleteTask(id int64) error {
+	return ts.repo.Delete(id)
+}
+
+func (ts *TaskService) ExportTasks(tasks Tasks, format tools.FileFormat) (*bytes.Buffer, error) {
+	return exportTasks(tasks, format)
 }

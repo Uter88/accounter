@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+
 	// Init graceful shutdown context
 	ctx, cancel := config.InitGracefulShutdownCtx()
 

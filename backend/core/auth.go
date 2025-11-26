@@ -3,6 +3,7 @@ package core
 import (
 	"accounter/config"
 	"accounter/domain/user"
+	"accounter/pkg/tools"
 	"errors"
 	"strings"
 	"time"
@@ -40,6 +41,14 @@ func (s *AuthService) LoginByCredentials(login, password string, cfg config.Conf
 // Authorize CurrentUser by JWT token
 func (s *AuthService) LoginByToken(c *gin.Context, cfg config.Config) (result user.CurrentUser, err error) {
 	token := c.GetHeader("Authorization")
+
+	if tools.IsEmpty(token) {
+		token = c.Query("token")
+	}
+
+	if items := strings.Split(token, " "); len(items) == 2 {
+		token = items[1]
+	}
 
 	if id, err := parseToken(token, cfg.SecretKey); err != nil {
 		return result, err
@@ -98,16 +107,10 @@ func (p *JWTPayload) GenerateToken(expire time.Duration, secretKey string) (stri
 }
 
 // Parse token by secret key (salt)
-func parseToken(data, secretKey string) (int64, error) {
-	token := strings.SplitN(data, " ", 2)
-
-	if len(token) != 2 {
-		return 0, errors.New("miss auth token")
-	}
-
+func parseToken(token, secretKey string) (int64, error) {
 	claims := JWTPayload{}
 
-	if err := claims.decode(token[1], secretKey); err != nil {
+	if err := claims.decode(token, secretKey); err != nil {
 		return 0, err
 	}
 

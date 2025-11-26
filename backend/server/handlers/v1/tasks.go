@@ -52,3 +52,22 @@ func (e *v1Engine) deleteTask(c *gin.Context) {
 		e.writeOk(c, "OK")
 	}
 }
+
+func (e *v1Engine) exportTasks(c *gin.Context) {
+	service := e.getTaskService(c)
+	format := c.Param("format")
+	params := task.NewTaskParams()
+
+	if err := c.ShouldBind(params); err != nil {
+		e.writeErr(c, http.StatusBadRequest, err)
+
+	} else if result, err := service.GetTaskList(params); err != nil {
+		e.writeErr(c, http.StatusInternalServerError, err)
+
+	} else if result, err := service.ExportTasks(result, format); err != nil {
+		e.writeErr(c, http.StatusBadRequest, err)
+
+	} else {
+		e.writeBlob(c, format, result)
+	}
+}

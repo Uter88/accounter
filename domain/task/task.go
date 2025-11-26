@@ -9,6 +9,9 @@ import (
 // Task slice model
 type Tasks []Task
 
+func (t Tasks) Empty() bool { return t.Len() == 0 }
+func (t Tasks) Len() int    { return len(t) }
+
 // Task model
 type Task struct {
 	ID           int64   `db:"id,omitempty" json:"id,omitempty"`

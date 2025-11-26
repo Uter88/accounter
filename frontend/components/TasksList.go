@@ -14,10 +14,6 @@ type TaskList struct {
 	app.Compo
 	common.BaseComponent
 
-	onRequest func(ctx app.Context, p *task.TaskParams)
-	onAdd     func(ctx app.Context)
-	onEdit    func(ctx app.Context, t task.Task)
-	onDelete  func(ctx app.Context, t task.Task)
 	onPreview func(ctx app.Context, t task.Task)
 	Tasks     task.Tasks
 
@@ -26,34 +22,11 @@ type TaskList struct {
 
 func NewTaskList(ctx common.AppContext, tasks task.Tasks) *TaskList {
 	return &TaskList{
-		Tasks:     tasks,
-		onAdd:     func(ctx app.Context) {},
-		onEdit:    func(ctx app.Context, t task.Task) {},
-		onDelete:  func(ctx app.Context, t task.Task) {},
-		onPreview: func(ctx app.Context, t task.Task) {},
-		onRequest: func(ctx app.Context, p *task.TaskParams) {},
-		params:    ctx.Store.GetTaskParams(),
+		BaseComponent: common.NewBaseComponent(ctx),
+		Tasks:         tasks,
+		onPreview:     func(ctx app.Context, t task.Task) {},
+		params:        ctx.Store.GetTaskParams(),
 	}
-}
-
-func (tl *TaskList) OnRequest(cb func(ctx app.Context, p *task.TaskParams)) *TaskList {
-	tl.onRequest = cb
-	return tl
-}
-
-func (tl *TaskList) OnAdd(cb func(ctx app.Context)) *TaskList {
-	tl.onAdd = cb
-	return tl
-}
-
-func (tl *TaskList) OnEdit(cb func(ctx app.Context, t task.Task)) *TaskList {
-	tl.onEdit = cb
-	return tl
-}
-
-func (tl *TaskList) OnDelete(cb func(ctx app.Context, t task.Task)) *TaskList {
-	tl.onDelete = cb
-	return tl
 }
 
 func (tl *TaskList) OnPreview(cb func(ctx app.Context, t task.Task)) *TaskList {
@@ -79,7 +52,7 @@ func (tl *TaskList) Render() app.UI {
 						Tooltip("Delete").
 						BtnClass("mx-1").
 						OnClick(func(ctx app.Context, e app.Event) {
-							tl.onDelete(ctx, tl.Tasks[i])
+							tl.onDelete(ctx, t)
 						}),
 				),
 			),
@@ -101,18 +74,25 @@ func (tl *TaskList) Render() app.UI {
 			NewCalendar().
 				Values(&tl.params.DateStart, &tl.params.DateEnd).
 				OnUpdate(func(ctx app.Context, e app.Event) {
-					tl.onRequest(ctx, tl.params)
+					tl.onRequest(ctx)
 				}),
 			NewBtnIcon("refresh").
 				Tooltip("refresh").
 				OnClick(func(ctx app.Context, e app.Event) {
-					tl.onRequest(ctx, tl.params)
+					tl.onRequest(ctx)
 				}),
 			NewBtnIcon("add").
 				Tooltip("add").
 				Target("#taskDialog").
 				OnClick(func(ctx app.Context, e app.Event) {
 					tl.onAdd(ctx)
+				}),
+
+			NewBtnIcon("download").
+				Tooltip("export").
+				Disabled(tl.Tasks.Empty()).
+				OnClick(func(ctx app.Context, e app.Event) {
+					tl.onExport(ctx, tools.FileFormatHTML)
 				}),
 		)
 
@@ -147,6 +127,53 @@ func (tl *TaskList) Render() app.UI {
 			toolbar,
 			table,
 		)
+}
+
+func (tl *TaskList) onRequest(ctx app.Context) {
+	tl.Ctx.Store.SetTaskParams(tl.params)
+
+	if err := tl.Ctx.Store.RequestTasks(); err != nil {
+		tl.ShowNotification(ctx, "Error", err.Error())
+	} else {
+		tl.ShowNotification(ctx, "Info", "Tasks loaded success!")
+	}
+}
+
+func (tl *TaskList) onAdd(ctx app.Context) {
+	t := task.NewTask()
+	params := tl.Ctx.Store.GetTaskParams()
+	tasks := tl.Ctx.Store.GetTasks()
+
+	t.SetDate(params.DateStart)
+
+	if len(params.Users) > 0 {
+		t.UserID = params.Users[0]
+
+		if l := len(tasks); l > 0 && tasks[l-1].UserID == t.UserID {
+			t.SetDate(tasks[l-1].Date)
+		}
+	}
+
+	ctx.NewActionWithValue("setTask", t)
+}
+
+func (tl *TaskList) onEdit(ctx app.Context, t task.Task) {
+	ctx.NewActionWithValue("setTask", t)
+}
+
+func (tl *TaskList) onDelete(ctx app.Context, t task.Task) {
+	if !tl.ShowConfirm(ctx, fmt.Sprintf("Delete task %s?", t.Description)) {
+		return
+	}
+
+	if err := tl.Ctx.Store.RemoveTask(t); err != nil {
+		tl.ShowNotification(ctx, "Error", err.Error())
+	}
+}
+
+func (tl *TaskList) onExport(ctx app.Context, format string) {
+	api := tl.Ctx.Store.ExportTasks(format)
+	ctx.Navigate(api)
 }
 
 func (tl *TaskList) getSummary() app.UI {
