@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"accounter/domain/task"
 	"accounter/domain/user"
 	"accounter/frontend/common"
 	"accounter/frontend/components"
@@ -104,36 +103,7 @@ func (inp *indexPage) Render() app.UI {
 			ctx.NewActionWithValue("setUser", user.User{})
 		})
 
-	tasksTable := components.NewTaskList(inp.Ctx, inp.Ctx.Store.GetTasks()).
-		OnRequest(func(ctx app.Context, p *task.TaskParams) {
-			inp.Ctx.Store.SetTaskParams(p)
-			inp.requestTasks(ctx)
-		}).
-		OnEdit(func(ctx app.Context, t task.Task) {
-			ctx.NewActionWithValue("setTask", t)
-		}).
-		OnAdd(func(ctx app.Context) {
-			t := task.NewTask()
-			params := inp.Ctx.Store.GetTaskParams()
-			tasks := inp.Ctx.Store.GetTasks()
-
-			t.SetDate(params.DateStart)
-
-			if len(params.Users) > 0 {
-				t.UserID = params.Users[0]
-
-				if l := len(tasks); l > 0 && tasks[l-1].UserID == t.UserID {
-					t.SetDate(tasks[l-1].Date)
-				}
-			}
-
-			ctx.NewActionWithValue("setTask", t)
-		}).
-		OnDelete(func(ctx app.Context, t task.Task) {
-			if err := inp.Ctx.Store.RemoveTask(t); err != nil {
-				inp.ShowNotification(ctx, "Error", err.Error())
-			}
-		})
+	tasksTable := components.NewTaskList(inp.Ctx, inp.Ctx.Store.GetTasks())
 
 	chart := inp.initChart(getChartOptions())
 

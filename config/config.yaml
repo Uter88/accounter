@@ -26,6 +26,7 @@ prod: &default
     allow_credentials: true
     expose_headers:
       - Content-Length
+      - Content-Disposition
     max_age: 12h
   db:
     driver: sqlite3

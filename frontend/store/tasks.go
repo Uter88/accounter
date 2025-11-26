@@ -58,6 +58,16 @@ func (s *tasksStore) RemoveTask(t task.Task) error {
 	return s.RequestTasks()
 }
 
+func (s *tasksStore) ExportTasks(format tools.FileFormat) string {
+	request := newRequest[string](*s.baseStore).
+		Path(fmt.Sprintf("tasks/export/%s", format)).
+		Params(s.params.Encode()).
+		Param("token", s.GetUser().Tokens.AccessToken).
+		Method(http.MethodGet)
+
+	return request.GetURL()
+}
+
 func (s *tasksStore) GetTasks() task.Tasks {
 	return s.tasks
 }

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Выгрузка задач</title>
+
+    <style lang="css">
+        html, body {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .tasks-page {
+            width: 50%;
+        }
+        .tasks-table {
+            width: 100%;
+            table-layout: fixed;
+        }
+        .summary-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px;
+        }
+        .text-link {
+            color: blue;
+            text-decoration: underline;
+        }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+
+    <div class="tasks-page">
+      <table class="tasks-table" border cellspacing="0" cellpadding="5">
+        <thead>
+          <tr>
+            <th rowspan="2">№п/п</th>
+            <th rowspan="2">Наименование этапа</th>
+            <th colspan="3">Сроки выполнения</th>
+            <th rowspan="2">Стоимость</th>
+          </tr>
+          <tr>
+            <th>Дата</th>
+            <th>Время начала</th>
+            <th>Время окончания</th>
+          </tr>
+        </thead>
+
+        <tbody align="center">
+          {{range $task := .Rows}}
+          <tr>
+            <td>{{ $task.Index }}</td>
+            <td>{{ $task.Description }} (<span class="text-link">{{ $task.TaskID }}</span>)</td>
+            <td>{{ $task.Date }}</td>
+            <td>{{ $task.WorkBegin }}</td>
+            <td>{{ $task.WorkEnd }}</td>
+            <td>{{ $task.Price }}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+
+      <div class="summary-row">
+        <div>{{ .PricePerHour }} руб. - стоимость за 1 час</div>
+        <div>Всего: <b>{{ .TotalPrice }}</b> руб.</div>
+      </div>
+      </div>
+    </div>
+  </body>
+</html>

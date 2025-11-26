@@ -36,6 +36,13 @@ func (h *BaseComponent) ShowNotification(ctx app.Context, title, msg string) {
 	})
 }
 
+func (h *BaseComponent) ShowConfirm(ctx app.Context, title string) bool {
+	confirm := app.Window().Get("confirm")
+	result := confirm.Invoke(title)
+
+	return result.Bool()
+}
+
 type AppContext struct {
 	context.Context
 	Store  *store.Store

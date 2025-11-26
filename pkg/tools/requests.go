@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -113,9 +114,53 @@ func NewRequest[R any](api string) Request[R] {
 }
 
 func (p Request[R]) Do() (R, R, error) {
-	api := fmt.Sprintf("%s/%s%s", p.api, p.path, p.params.Encode())
+	api := p.GetURL()
 
 	return MakeJSONRequest[R, R](p.method, api, p.data, p.headers)
+}
+
+func (p Request[R]) GetURL() string {
+	return fmt.Sprintf("%s/%s%s", p.api, p.path, p.params.Encode())
+}
+
+type BlobResponse struct {
+	Content     *bytes.Buffer
+	Filename    string
+	Size        int64
+	ContentType string
+}
+
+func (p Request[R]) Blob() (r BlobResponse, err error) {
+	r.Content = bytes.NewBuffer(nil)
+	api := p.GetURL()
+
+	response, err := MakeRequest(p.method, api, p.data, p.headers)
+
+	if err != nil {
+		return
+	}
+
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return r, fmt.Errorf("error make request, code: %d status: %s", response.StatusCode, response.Status)
+	}
+
+	r.Size, err = r.Content.ReadFrom(response.Body)
+
+	if err != nil {
+		return
+	}
+
+	r.ContentType = response.Header.Get("Content-Type")
+
+	if _, filename, ok := strings.Cut(response.Header.Get("Content-Disposition"), "filename="); ok {
+		r.Filename = strings.ReplaceAll(filename, `"`, "")
+	} else {
+		r.Filename = "download"
+	}
+
+	return
 }
 
 func MakeJSONRequest[R, E any](method, url string, data io.Reader, headers ...map[string]string) (okResp R, errResp E, err error) {
