@@ -91,33 +91,35 @@ func (tl *TaskList) Render() app.UI {
 					tl.onExport(ctx, tools.FileFormatHTML)
 				}),
 		)
-
-	table := app.Table().
-		Class("table table-striped table-hover table-bordered w-100").
-		Style("table-layout", "fixed").
-		Style("vertical-align", "middle").
+	table := app.Span().
+		Class("table-wrapper").
 		Body(
-			app.THead().Body(
-				app.Tr().Body(
-					app.Th().Text(""),
-					app.Th().Text("Date"),
-					app.Th().Text("Task ID"),
-					app.Th().Text("Description"),
-					app.Th().Text("User"),
-					app.Th().Text("Status"),
-					app.Th().Text("Work begin"),
-					app.Th().Text("Work end"),
-					app.Th().Text("Duration"),
-					app.Th().Text("Cost"),
+			app.Table().
+				Class("table table-striped table-hover table-bordered w-100 sticky-header sticky-footer").
+				Style("vertical-align", "middle").
+				Body(
+					app.THead().Body(
+						app.Tr().Body(
+							app.Th().Text(""),
+							app.Th().Text("Date"),
+							app.Th().Text("Task ID"),
+							app.Th().Text("Description"),
+							app.Th().Text("User"),
+							app.Th().Text("Status"),
+							app.Th().Text("Work begin"),
+							app.Th().Text("Work end"),
+							app.Th().Text("Duration"),
+							app.Th().Text("Cost"),
+						),
+					),
+					app.TBody().Body(rows...),
+					app.TFoot().Body(tl.getSummary()),
 				),
-			),
-			app.TBody().Body(rows...),
-			app.TFoot().Body(tl.getSummary()),
 		)
 
 	return app.Div().
 		Class("w-100 h-100").
-		Style("overflow", "auto").
+		Style("overflow", "hidden").
 		Style("max-height", "800px").
 		Body(
 			toolbar,

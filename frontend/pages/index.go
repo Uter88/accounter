@@ -80,7 +80,6 @@ func (inp *indexPage) Render() app.UI {
 						Body(
 							app.Div().
 								Class("card p-1 d-flex h-50 flex-column align-items-center mx-3").
-								Style("border", "1px solid red").
 								Body(
 									components.NewUserForm(inp.Ctx, false),
 									usersTable,
@@ -91,7 +90,6 @@ func (inp *indexPage) Render() app.UI {
 
 					app.Div().
 						Class("card p-1 d-flex flex-column align-items-center h-100 mx-1").
-						Style("border", "1px solid red").
 						Body(
 							components.NewTaskForm(inp.Ctx),
 							components.NewTaskList(inp.Ctx, inp.Ctx.Store.GetTasks()),
