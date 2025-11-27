@@ -120,7 +120,6 @@ func (tl *TaskList) Render() app.UI {
 	return app.Div().
 		Class("w-100 h-100").
 		Style("overflow", "hidden").
-		Style("max-height", "800px").
 		Body(
 			toolbar,
 			table,
