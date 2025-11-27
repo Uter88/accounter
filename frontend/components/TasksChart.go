@@ -25,8 +25,8 @@ func NewTasksChart(tasks task.Tasks, params *task.TaskParams) *TasksChart {
 		Tasks:     tasks,
 		Params:    params,
 		chart: NewChart("tasks-chart").
-			Width("500px").
-			Height("400px").
+			Width("100%").
+			Height("100%").
 			Lazy(true),
 	}
 }
@@ -55,6 +55,7 @@ func (t *TasksChart) OnMount(ctx app.Context) {
 func (t *TasksChart) Render() app.UI {
 	return app.Div().
 		Class("card p-1 d-flex h-50 flex-column align-items-center mt-3 mx-3").
+		Style("position", "relative").
 		Body(
 			app.Div().Class("d-flex flex-row").Body(
 				NewBtnIcon("timeline").
@@ -99,16 +100,20 @@ func (t *TasksChart) makeLineSeries(tasks task.Tasks) *models.ChartOptions {
 		}
 	)
 
-	for user, tasks := range tasks.GroupByUsers() {
-		legends = append(legends, user)
+	for _, item := range tasks.GroupByUsers().Items() {
+		legends = append(legends, item.Key)
 
 		s := models.Series{
 			Type: models.SeriesLine,
-			Name: user,
+			Name: item.Key,
+			Label: models.Label{
+				Show:     true,
+				FontSize: 9,
+			},
 		}
 
-		for d, tasks := range tasks.GroupByDates() {
-			s.Data = append(s.Data, models.Array{d * 1000, tasks.GetPrice()})
+		for _, item := range item.Value.GroupByDates().Items() {
+			s.Data = append(s.Data, models.Array{item.Key * 1000, int(item.Value.GetPrice())})
 		}
 
 		series = append(series, s)
@@ -131,11 +136,11 @@ func (t *TasksChart) makeBarSeries(tasks task.Tasks) *models.ChartOptions {
 		}
 	)
 
-	for user, tasks := range tasks.GroupByUsers() {
-		xAxis = append(xAxis, user)
-		legends = append(legends, user)
+	for _, item := range tasks.GroupByUsers().Items() {
+		xAxis = append(xAxis, item.Key)
+		legends = append(legends, item.Key)
 
-		series.Data = append(series.Data, tasks.GetPrice())
+		series.Data = append(series.Data, item.Value.GetPrice())
 	}
 
 	return models.NewChartOptions().

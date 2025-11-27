@@ -73,7 +73,7 @@ func (inp *indexPage) Render() app.UI {
 
 			// Body
 			app.Div().
-				Class("d-flex flex-row w-100 p-3").
+				Class("d-flex flex-row h-100 w-100 p-3").
 				Body(
 					app.Div().
 						Class("d-flex h-100 col-5 flex-column").

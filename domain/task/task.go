@@ -20,22 +20,30 @@ func (tasks Tasks) GetPrice() (price float32) {
 	return tools.ToFixed(price, 2)
 }
 
-func (tasks Tasks) GroupByUsers() map[string]Tasks {
-	result := make(map[string]Tasks)
+func (tasks Tasks) GroupByUsers() *tools.OrderedMap[string, Tasks] {
+	result := tools.NewOrderedMap[string, Tasks]()
 
 	for _, t := range tasks {
-		result[t.UserLabel] = append(result[t.UserLabel], t)
+		items, _ := result.Get(t.UserLabel)
+		items = append(items, t)
+		result.Set(t.UserLabel, items)
 	}
+
+	result.Sort()
 
 	return result
 }
 
-func (tasks Tasks) GroupByDates() map[int64]Tasks {
-	result := make(map[int64]Tasks)
+func (tasks Tasks) GroupByDates() *tools.OrderedMap[int64, Tasks] {
+	result := tools.NewOrderedMap[int64, Tasks]()
 
 	for _, t := range tasks {
-		result[t.Date] = append(result[t.Date], t)
+		items, _ := result.Get(t.Date)
+		items = append(items, t)
+		result.Set(t.Date, items)
 	}
+
+	result.Sort()
 
 	return result
 }

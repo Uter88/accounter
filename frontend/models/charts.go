@@ -53,9 +53,15 @@ type YAxis struct {
 }
 
 type Series struct {
-	Name string     `json:"name,omitempty"`
-	Type SeriesType `json:"type,omitempty"`
-	Data Array      `json:"data,omitempty"`
+	Name  string     `json:"name,omitempty"`
+	Type  SeriesType `json:"type,omitempty"`
+	Data  Array      `json:"data,omitempty"`
+	Label Label      `json:"label"`
+}
+
+type Label struct {
+	Show     bool `json:"show,omitempty"`
+	FontSize int  `json:"fontSize"`
 }
 
 func (o *ChartOptions) WithTitle(text string) *ChartOptions {
