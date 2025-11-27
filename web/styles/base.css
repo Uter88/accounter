@@ -59,3 +59,39 @@ table td, table th {
 table td.wrap-cell, table th.wrap_cell {
     white-space: normal;
 }
+
+.sticky-header {
+  thead tr th{
+    position: sticky;
+    z-index: 1;
+  }
+
+  thead tr:first-child th{
+     background-color: rgb(235 235 235);
+     top: 0;
+  } 
+
+  tbody {
+     scroll-margin-top: 48px;
+  }
+   
+}
+
+.sticky-footer {
+  tfoot tr:last-child{
+    position: sticky;
+    bottom: 0;
+    z-index: 101;
+  }
+
+  tfoot tr:last-child td{
+    background-color: rgb(235 235 235);
+  }
+}
+
+.table-wrapper {
+    overflow-y: scroll;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+}
