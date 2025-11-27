@@ -12,42 +12,39 @@ type UserList struct {
 	app.Compo
 	common.BaseComponent
 
-	onRequest func(ctx app.Context)
-	onAdd     func(ctx app.Context)
-	onEdit    func(ctx app.Context, u user.User)
-	Users     user.Users
-	loading   bool
-	selected  []int64
+	Users    user.Users
+	selected []int64
 }
 
 func NewUserList(ctx common.AppContext, users user.Users) *UserList {
 	return &UserList{
 		BaseComponent: common.NewBaseComponent(ctx),
 		Users:         users,
-		onAdd:         func(ctx app.Context) {},
-		onEdit:        func(ctx app.Context, u user.User) {},
-		onRequest:     func(ctx app.Context) {},
 	}
 }
 
-func (ul *UserList) OnRequest(cb func(ctx app.Context)) *UserList {
-	ul.onRequest = cb
-	return ul
+func (ul *UserList) OnMount(ctx app.Context) {
+	ul.onRequest(ctx)
 }
 
-func (ul *UserList) OnAdd(cb func(ctx app.Context)) *UserList {
-	ul.onAdd = cb
-	return ul
+func (ul *UserList) onRequest(ctx app.Context) {
+	ul.EnableNotifications(ctx)
+
+	if err := ul.Ctx.Store.RequestUsers(); err != nil {
+		ul.ShowNotification(ctx, "Error", err.Error())
+	}
 }
 
-func (ul *UserList) OnEdit(cb func(ctx app.Context, u user.User)) *UserList {
-	ul.onEdit = cb
-	return ul
+func (ul *UserList) onEdit(ctx app.Context, u *user.User) {
+	if u == nil {
+		u = &user.User{}
+	}
+
+	ctx.NewActionWithValue("setUser", u)
 }
 
-func (ul *UserList) Loading(v bool) *UserList {
-	ul.loading = v
-	return ul
+func (ul *UserList) isLoading() bool {
+	return ul.Ctx.Store.GetTasksLoading()
 }
 
 func (ul *UserList) Render() app.UI {
@@ -71,7 +68,7 @@ func (ul *UserList) Render() app.UI {
 						Tooltip("Edit user").
 						Target("#userDialog").
 						OnClick(func(ctx app.Context, e app.Event) {
-							ul.onEdit(ctx, ul.Users[i])
+							ul.onEdit(ctx, &ul.Users[i])
 						}),
 					NewBtnIcon("delete").
 						Tooltip("Delete").
@@ -101,7 +98,7 @@ func (ul *UserList) Render() app.UI {
 				Tooltip("add").
 				Target("#userDialog").
 				OnClick(func(ctx app.Context, e app.Event) {
-					ul.onAdd(ctx)
+					ul.onEdit(ctx, nil)
 				}),
 		)
 
@@ -124,6 +121,7 @@ func (ul *UserList) Render() app.UI {
 		)
 
 	return app.Div().Body(
+		NewLoading(ul.isLoading()),
 		toolbar,
 		table,
 	)

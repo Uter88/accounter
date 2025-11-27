@@ -3,6 +3,7 @@ package components
 import (
 	"accounter/domain/task"
 	"accounter/frontend/models"
+	"accounter/pkg/tools"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -16,12 +17,14 @@ type TasksChart struct {
 	lazy      bool
 	chart     *Chart
 	chartType models.SeriesType
+	valueType string
 }
 
 func NewTasksChart(tasks task.Tasks, params *task.TaskParams) *TasksChart {
 	return &TasksChart{
 		lazy:      true,
 		chartType: models.SeriesBar,
+		valueType: "money",
 		Tasks:     tasks,
 		Params:    params,
 		chart: NewChart("tasks-chart").
@@ -36,8 +39,13 @@ func (t *TasksChart) Lazy(v bool) *TasksChart {
 	return t
 }
 
-func (t *TasksChart) Type(tp models.SeriesType) *TasksChart {
+func (t *TasksChart) ChartType(tp models.SeriesType) *TasksChart {
 	t.chartType = tp
+	return t
+}
+
+func (t *TasksChart) ValueType(tp string) *TasksChart {
+	t.valueType = tp
 	return t
 }
 
@@ -59,13 +67,31 @@ func (t *TasksChart) Render() app.UI {
 		Body(
 			app.Div().Class("d-flex flex-row").Body(
 				NewBtnIcon("timeline").
+					Tooltip("Line chart").
 					OnClick(func(ctx app.Context, e app.Event) {
 						t.chartType = models.SeriesLine
 						t.redraw(ctx)
 					}),
 				NewBtnIcon("bar_chart").
+					Tooltip("Bar chart").
 					OnClick(func(ctx app.Context, e app.Event) {
 						t.chartType = models.SeriesBar
+						t.redraw(ctx)
+					}),
+
+				app.Div().Class("vr"),
+
+				NewBtnIcon("money").
+					Tooltip("Money mode").
+					OnClick(func(ctx app.Context, e app.Event) {
+						t.valueType = "money"
+						t.redraw(ctx)
+					}),
+
+				NewBtnIcon("nest_clock_farsight_analog").
+					Tooltip("Time mode").
+					OnClick(func(ctx app.Context, e app.Event) {
+						t.valueType = "time"
 						t.redraw(ctx)
 					}),
 			),
@@ -97,6 +123,9 @@ func (t *TasksChart) makeLineSeries(tasks task.Tasks) *models.ChartOptions {
 		yAxis   = models.NewYAxis("value")
 	)
 
+	xAxis.Min = float64(t.Params.DateStart * 1000)
+	xAxis.Max = float64(t.Params.DateEnd * 1000)
+
 	for _, item := range tasks.GroupByUsers().Items() {
 		legends = append(legends, item.Key)
 
@@ -110,7 +139,16 @@ func (t *TasksChart) makeLineSeries(tasks task.Tasks) *models.ChartOptions {
 		}
 
 		for _, item := range item.Value.GroupByDates().Items() {
-			s.Data = append(s.Data, models.Array{item.Key * 1000, int(item.Value.GetPrice())})
+			var value any
+
+			switch t.valueType {
+			case "money":
+				value = int(item.Value.GetPrice())
+			case "time":
+				value = tools.ToFixed(item.Value.GetDuration().Hours(), 1)
+			}
+
+			s.Data = append(s.Data, models.Array{item.Key * 1000, value})
 		}
 
 		series = append(series, s)
@@ -138,7 +176,16 @@ func (t *TasksChart) makeBarSeries(tasks task.Tasks) *models.ChartOptions {
 		xAxis.Data = append(xAxis.Data, item.Key)
 		legends = append(legends, item.Key)
 
-		series.Data = append(series.Data, item.Value.GetPrice())
+		var value any
+
+		switch t.valueType {
+		case "money":
+			value = item.Value.GetPrice()
+		case "time":
+			value = tools.ToFixed(item.Value.GetDuration().Hours(), 1)
+		}
+
+		series.Data = append(series.Data, value)
 	}
 
 	return models.NewChartOptions().

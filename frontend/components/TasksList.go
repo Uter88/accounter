@@ -30,6 +30,10 @@ func (tl *TaskList) OnMount(ctx app.Context) {
 	tl.onRequest(ctx)
 }
 
+func (tl *TaskList) isLoading() bool {
+	return tl.Ctx.Store.GetTasksLoading()
+}
+
 func (tl *TaskList) Render() app.UI {
 	rows := make([]app.UI, len(tl.Tasks))
 
@@ -121,6 +125,7 @@ func (tl *TaskList) Render() app.UI {
 		Class("w-100 h-100").
 		Style("overflow", "hidden").
 		Body(
+			NewLoading(tl.isLoading()),
 			toolbar,
 			table,
 		)
@@ -131,8 +136,6 @@ func (tl *TaskList) onRequest(ctx app.Context) {
 
 	if err := tl.Ctx.Store.RequestTasks(ctx); err != nil {
 		tl.ShowNotification(ctx, "Error", err.Error())
-	} else {
-		tl.ShowNotification(ctx, "Info", "Tasks loaded success!")
 	}
 }
 

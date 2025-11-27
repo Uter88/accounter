@@ -20,6 +20,14 @@ func (tasks Tasks) GetPrice() (price float32) {
 	return tools.ToFixed(price, 2)
 }
 
+func (tasks Tasks) GetDuration() (duration time.Duration) {
+	for i := range tasks {
+		duration += tasks[i].GetDuration()
+	}
+
+	return
+}
+
 func (tasks Tasks) GroupByUsers() *tools.OrderedMap[string, Tasks] {
 	result := tools.NewOrderedMap[string, Tasks]()
 
