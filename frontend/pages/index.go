@@ -68,8 +68,10 @@ func (inp *indexPage) Render() app.UI {
 		Body(
 			// Header
 			app.Header().
-				Class("d-flex flex-row w-100 py-2 px-3 justify-content-end").
-				Body(inp.GroupBtn()),
+				Class("d-flex flex-row w-100 py-2 px-3 justify-content-between").
+				Body(
+					app.H5().Text("Personal Area").Class("mx-3"),
+					inp.GroupBtn()),
 
 			// Body
 			app.Div().
