@@ -35,7 +35,6 @@ type Calendar struct {
 	Vals        []*int64
 
 	onUpdate app.EventHandler
-	updates  map[int]bool
 }
 
 func (f *Calendar) PrependIcon(value string) *Calendar {
@@ -47,7 +46,6 @@ func NewCalendar() *Calendar {
 	return &Calendar{
 		tp:       InputTypeDate,
 		onUpdate: func(ctx app.Context, e app.Event) {},
-		updates:  make(map[int]bool),
 	}
 }
 
@@ -93,8 +91,6 @@ func (c *Calendar) Value(v *int64) *Calendar {
 
 func (c *Calendar) Values(start, stop *int64) *Calendar {
 	c.Vals = []*int64{start, stop}
-	c.updates[0] = false
-	c.updates[1] = false
 
 	return c
 }
@@ -164,30 +160,8 @@ func (c *Calendar) onInput(ctx app.Context, e app.Event, index int, dest *int64)
 
 		ts := dt.Unix()
 		*dest = ts
-
-		c.updates[index] = true
-
-		if c.isReadyToUpdate() {
-			c.onUpdate(ctx, e)
-			c.resetUpdates()
-		}
+		c.onUpdate(ctx, e)
 	}
-}
-
-func (c *Calendar) resetUpdates() {
-	for i := range c.updates {
-		c.updates[i] = false
-	}
-}
-
-func (c *Calendar) isReadyToUpdate() bool {
-	for _, u := range c.updates {
-		if !u {
-			return false
-		}
-	}
-
-	return true
 }
 
 func (c *Calendar) formatValue(v int64) string {

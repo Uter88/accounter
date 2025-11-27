@@ -3,6 +3,7 @@ package tools
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"time"
 )
 
@@ -13,6 +14,12 @@ func SecondsToTime(s int64) (int64, int64, int64) {
 	seconds := s % 60
 
 	return hours, min, seconds
+}
+
+func FormatMoney[T float32 | float64](m T) string {
+	v := fmt.Sprintf("%.2f", m)
+	reg := regexp.MustCompile(`\B(?=(\d{3})+(?!\d))`)
+	return reg.ReplaceAllString(v, " ")
 }
 
 func FormatDuration(d time.Duration, withSeconds bool) string {

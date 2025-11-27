@@ -93,11 +93,8 @@ func (t *TasksChart) makeLineSeries(tasks task.Tasks) *models.ChartOptions {
 	var (
 		legends []string
 		series  []models.Series
-		xAxis   = models.XAxis{
-			Type: "time",
-			Min:  float64(t.Params.DateStart * 1000),
-			Max:  float64(t.Params.DateEnd * 1000),
-		}
+		xAxis   = models.NewXAxis("time")
+		yAxis   = models.NewYAxis("value")
 	)
 
 	for _, item := range tasks.GroupByUsers().Items() {
@@ -123,21 +120,22 @@ func (t *TasksChart) makeLineSeries(tasks task.Tasks) *models.ChartOptions {
 		WithTitle("Tasks chart").
 		WithLegend(legends...).
 		WithXAxis(xAxis).
-		WithYAxis(models.YAxis{Type: "value"}).
+		WithYAxis(yAxis).
 		WithSeries(series...)
 }
 
 func (t *TasksChart) makeBarSeries(tasks task.Tasks) *models.ChartOptions {
 	var (
-		xAxis   models.Array
 		legends []string
 		series  = models.Series{
 			Type: models.SeriesBar,
 		}
+		xAxis = models.NewXAxis("category")
+		yAxis = models.NewYAxis("value")
 	)
 
 	for _, item := range tasks.GroupByUsers().Items() {
-		xAxis = append(xAxis, item.Key)
+		xAxis.Data = append(xAxis.Data, item.Key)
 		legends = append(legends, item.Key)
 
 		series.Data = append(series.Data, item.Value.GetPrice())
@@ -146,7 +144,7 @@ func (t *TasksChart) makeBarSeries(tasks task.Tasks) *models.ChartOptions {
 	return models.NewChartOptions().
 		WithTitle("Tasks chart").
 		WithLegend(legends...).
-		WithXAxis(models.XAxis{Type: "category", Data: xAxis}).
-		WithYAxis(models.YAxis{Type: "value"}).
+		WithXAxis(xAxis).
+		WithYAxis(yAxis).
 		WithSeries(series)
 }
