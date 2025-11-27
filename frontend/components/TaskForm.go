@@ -24,9 +24,10 @@ func NewTaskForm(ctx common.AppContext) *TaskForm {
 
 func (uf *TaskForm) OnMount(ctx app.Context) {
 	ctx.Handle("setTask", func(ctx app.Context, a app.Action) {
-		task := a.Value.(task.Task)
-		uf.data = task
-		uf.Open()
+		if task, ok := a.Value.(task.Task); ok {
+			uf.data = task
+			uf.Open()
+		}
 	})
 
 	ctx.Handle("resetTask", func(ctx app.Context, a app.Action) {
@@ -45,7 +46,7 @@ func (tf *TaskForm) Hide() *TaskForm {
 	return tf
 }
 
-func (tf *TaskForm) El() app.UI {
+func (tf *TaskForm) makeForm() app.UI {
 	return app.Form().
 		Class("d-flex flex-column").
 		Body(
@@ -79,24 +80,22 @@ func (tf *TaskForm) El() app.UI {
 					},
 				}).
 				WrappClass("mt-4").
-				Clearable(true).
-				Required(true).
 				ID("task-status-field"),
 
 			NewCalendar().
 				Label("Date").
 				WrapClass("mt-4").
-				Required(true).
 				Value(&tf.data.Date).
 				ID("task-date").
 				OnUpdate(func(ctx app.Context, e app.Event) {
-					tf.data.SetDate(tf.data.Date)
+					ctx.Defer(func(ctx app.Context) {
+						tf.data.SetDate(tf.data.Date)
+					})
 				}),
 
 			NewCalendar().
 				Label("Work time").
 				WrapClass("mt-4").
-				Required(true).
 				Type(InputTypeDatetimeRange).
 				Values(&tf.data.WorkBegin, &tf.data.WorkEnd).
 				ID("work-time"),
@@ -124,11 +123,12 @@ func (tf *TaskForm) userOptions() (options []SelectOption[int64]) {
 
 func (tf *TaskForm) Render() app.UI {
 	return NewDialog("taskDialog").
+		Persistent(true).
 		Title("Task form").
 		Visible(tf.visible).
 		IsValid(tf.isValid()).
 		OnOk(func(ctx app.Context, e app.Event) {
-			if _, err := tf.Ctx.Store.SaveTask(tf.data); err != nil {
+			if _, err := tf.Ctx.Store.SaveTask(ctx, tf.data); err != nil {
 				tf.ShowNotification(ctx, "Error save user", err.Error())
 			} else {
 				tf.onHide(ctx)
@@ -137,7 +137,7 @@ func (tf *TaskForm) Render() app.UI {
 		OnDismiss(func(ctx app.Context, e app.Event) {
 			ctx.NewAction("resetTask")
 		}).
-		Content(tf.El())
+		Content(tf.makeForm())
 }
 
 func (tf *TaskForm) isValid() bool {

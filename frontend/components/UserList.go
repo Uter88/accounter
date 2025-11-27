@@ -64,7 +64,7 @@ func (ul *UserList) Render() app.UI {
 							params := ul.Ctx.Store.GetTaskParams()
 							params.Users = ul.selected
 							ul.Ctx.Store.SetTaskParams(params)
-							ul.Ctx.Store.RequestTasks()
+							ul.Ctx.Store.RequestTasks(ctx)
 						}),
 
 					NewBtnIcon("edit").

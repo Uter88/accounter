@@ -5,6 +5,8 @@ import (
 	"accounter/pkg/tools"
 	"fmt"
 	"net/http"
+
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
 type tasksStore struct {
@@ -14,7 +16,7 @@ type tasksStore struct {
 	params *task.TaskParams
 }
 
-func (s *tasksStore) RequestTasks() error {
+func (s *tasksStore) RequestTasks(ctx app.Context) error {
 	resp, errResp, err := newRequest[task.Tasks](*s.baseStore).
 		Path("tasks/list").
 		Params(s.params.Encode()).
@@ -26,10 +28,12 @@ func (s *tasksStore) RequestTasks() error {
 
 	s.tasks = resp.Data
 
+	ctx.NewActionWithValue("setTasks", s.tasks)
+
 	return nil
 }
 
-func (s *tasksStore) SaveTask(t task.Task) (task.Task, error) {
+func (s *tasksStore) SaveTask(ctx app.Context, t task.Task) (task.Task, error) {
 	resp, errResp, err := newRequest[task.Task](*s.baseStore).
 		Path("tasks/save").
 		Method(http.MethodPost).
@@ -42,10 +46,10 @@ func (s *tasksStore) SaveTask(t task.Task) (task.Task, error) {
 
 	result := resp.Data
 
-	return result, s.RequestTasks()
+	return result, s.RequestTasks(ctx)
 }
 
-func (s *tasksStore) RemoveTask(t task.Task) error {
+func (s *tasksStore) RemoveTask(ctx app.Context, t task.Task) error {
 	_, errResp, err := newRequest[string](*s.baseStore).
 		Path(fmt.Sprintf("tasks/delete/%d", t.ID)).
 		Method(http.MethodDelete).
@@ -55,7 +59,7 @@ func (s *tasksStore) RemoveTask(t task.Task) error {
 		return fmt.Errorf("error save task, status: %s, error: %s", err.Error(), errResp.Error)
 	}
 
-	return s.RequestTasks()
+	return s.RequestTasks(ctx)
 }
 
 func (s *tasksStore) ExportTasks(format tools.FileFormat) string {

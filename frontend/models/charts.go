@@ -2,6 +2,14 @@ package models
 
 import "encoding/json"
 
+type SeriesType string
+
+const (
+	SeriesBar  SeriesType = "bar"
+	SeriesLine SeriesType = "line"
+	SeriesPie  SeriesType = "pie"
+)
+
 func NewChartOptions() *ChartOptions {
 	return &ChartOptions{}
 }
@@ -41,12 +49,13 @@ type XAxis struct {
 }
 
 type YAxis struct {
+	Type string `json:"type,omitempty"`
 }
 
 type Series struct {
-	Name string `json:"name,omitempty"`
-	Type string `json:"type,omitempty"`
-	Data Array  `json:"data,omitempty"`
+	Name string     `json:"name,omitempty"`
+	Type SeriesType `json:"type,omitempty"`
+	Data Array      `json:"data,omitempty"`
 }
 
 func (o *ChartOptions) WithTitle(text string) *ChartOptions {

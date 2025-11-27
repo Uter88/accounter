@@ -46,7 +46,6 @@ func (f *Calendar) PrependIcon(value string) *Calendar {
 func NewCalendar() *Calendar {
 	return &Calendar{
 		tp:       InputTypeDate,
-		Vals:     []*int64{},
 		onUpdate: func(ctx app.Context, e app.Event) {},
 		updates:  make(map[int]bool),
 	}
@@ -93,9 +92,7 @@ func (c *Calendar) Value(v *int64) *Calendar {
 }
 
 func (c *Calendar) Values(start, stop *int64) *Calendar {
-	c.Vals = make([]*int64, 2)
-	c.Vals[0] = start
-	c.Vals[1] = stop
+	c.Vals = []*int64{start, stop}
 	c.updates[0] = false
 	c.updates[1] = false
 

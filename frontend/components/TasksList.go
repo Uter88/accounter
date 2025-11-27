@@ -14,9 +14,7 @@ type TaskList struct {
 	app.Compo
 	common.BaseComponent
 
-	onPreview func(ctx app.Context, t task.Task)
-	Tasks     task.Tasks
-
+	Tasks  task.Tasks
 	params *task.TaskParams
 }
 
@@ -24,14 +22,12 @@ func NewTaskList(ctx common.AppContext, tasks task.Tasks) *TaskList {
 	return &TaskList{
 		BaseComponent: common.NewBaseComponent(ctx),
 		Tasks:         tasks,
-		onPreview:     func(ctx app.Context, t task.Task) {},
 		params:        ctx.Store.GetTaskParams(),
 	}
 }
 
-func (tl *TaskList) OnPreview(cb func(ctx app.Context, t task.Task)) *TaskList {
-	tl.onPreview = cb
-	return tl
+func (tl *TaskList) OnMount(ctx app.Context) {
+	tl.onRequest(ctx)
 }
 
 func (tl *TaskList) Render() app.UI {
@@ -45,7 +41,7 @@ func (tl *TaskList) Render() app.UI {
 						Tooltip("Edit task").
 						Target("#taskDialog").
 						OnClick(func(ctx app.Context, e app.Event) {
-							tl.onEdit(ctx, tl.Tasks[i])
+							tl.onEdit(ctx, &tl.Tasks[i])
 						}),
 
 					NewBtnIcon("delete").
@@ -85,7 +81,7 @@ func (tl *TaskList) Render() app.UI {
 				Tooltip("add").
 				Target("#taskDialog").
 				OnClick(func(ctx app.Context, e app.Event) {
-					tl.onAdd(ctx)
+					tl.onEdit(ctx, nil)
 				}),
 
 			NewBtnIcon("download").
@@ -132,33 +128,32 @@ func (tl *TaskList) Render() app.UI {
 func (tl *TaskList) onRequest(ctx app.Context) {
 	tl.Ctx.Store.SetTaskParams(tl.params)
 
-	if err := tl.Ctx.Store.RequestTasks(); err != nil {
+	if err := tl.Ctx.Store.RequestTasks(ctx); err != nil {
 		tl.ShowNotification(ctx, "Error", err.Error())
 	} else {
 		tl.ShowNotification(ctx, "Info", "Tasks loaded success!")
 	}
 }
 
-func (tl *TaskList) onAdd(ctx app.Context) {
-	t := task.NewTask()
-	params := tl.Ctx.Store.GetTaskParams()
-	tasks := tl.Ctx.Store.GetTasks()
+func (tl *TaskList) onEdit(ctx app.Context, t *task.Task) {
+	if t == nil {
+		nt := task.NewTask()
+		t = &nt
+		params := tl.Ctx.Store.GetTaskParams()
+		tasks := tl.Ctx.Store.GetTasks()
 
-	t.SetDate(params.DateStart)
+		t.SetDate(params.DateStart)
 
-	if len(params.Users) > 0 {
-		t.UserID = params.Users[0]
+		if len(params.Users) > 0 {
+			t.UserID = params.Users[0]
 
-		if l := len(tasks); l > 0 && tasks[l-1].UserID == t.UserID {
-			t.SetDate(tasks[l-1].Date)
+			if l := len(tasks); l > 0 && tasks[l-1].UserID == t.UserID {
+				t.SetDate(tasks[l-1].Date)
+			}
 		}
 	}
 
-	ctx.NewActionWithValue("setTask", t)
-}
-
-func (tl *TaskList) onEdit(ctx app.Context, t task.Task) {
-	ctx.NewActionWithValue("setTask", t)
+	ctx.NewActionWithValue("setTask", *t)
 }
 
 func (tl *TaskList) onDelete(ctx app.Context, t task.Task) {
@@ -166,7 +161,7 @@ func (tl *TaskList) onDelete(ctx app.Context, t task.Task) {
 		return
 	}
 
-	if err := tl.Ctx.Store.RemoveTask(t); err != nil {
+	if err := tl.Ctx.Store.RemoveTask(ctx, t); err != nil {
 		tl.ShowNotification(ctx, "Error", err.Error())
 	}
 }

@@ -9,8 +9,36 @@ import (
 // Task slice model
 type Tasks []Task
 
-func (t Tasks) Empty() bool { return t.Len() == 0 }
-func (t Tasks) Len() int    { return len(t) }
+func (tasks Tasks) Empty() bool { return tasks.Len() == 0 }
+func (tasks Tasks) Len() int    { return len(tasks) }
+
+func (tasks Tasks) GetPrice() (price float32) {
+	for i := range tasks {
+		price += tasks[i].GetPrice()
+	}
+
+	return tools.ToFixed(price, 2)
+}
+
+func (tasks Tasks) GroupByUsers() map[string]Tasks {
+	result := make(map[string]Tasks)
+
+	for _, t := range tasks {
+		result[t.UserLabel] = append(result[t.UserLabel], t)
+	}
+
+	return result
+}
+
+func (tasks Tasks) GroupByDates() map[int64]Tasks {
+	result := make(map[int64]Tasks)
+
+	for _, t := range tasks {
+		result[t.Date] = append(result[t.Date], t)
+	}
+
+	return result
+}
 
 // Task model
 type Task struct {
