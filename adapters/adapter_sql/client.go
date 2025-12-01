@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -67,7 +68,7 @@ func (c *SQLClient) Connect(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*20)
 	defer cancel()
 
-	if conn, err := sqlx.ConnectContext(ctx, c.driver, c.dsn); err != nil {
+	if conn, err := sqlx.Open(c.driver, c.dsn); err != nil {
 		return fmt.Errorf("could not create %s DB connection pool: %s", c.driver, err.Error())
 
 	} else if err = conn.PingContext(ctx); err != nil {
@@ -88,42 +89,6 @@ func (c *SQLClient) Disconnect() error {
 	return nil
 }
 
-// Migrate tables chemas
-func (c *SQLClient) Migrate(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Second*20)
-	defer cancel()
-
-	schema := `CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY,
-		login TEXT,
-		password TEXT,
-		name TEXT,
-		surname TEXT,
-		patronymic TEXT,
-		price_per_hour REAL
-	);`
-
-	// execute a query on the server
-	if _, err := c.db.ExecContext(ctx, schema); err != nil {
-		return fmt.Errorf("error migrate users table: %s", err.Error())
-	}
-
-	schema = `
-		CREATE TABLE IF NOT EXISTS tasks (
-			id INTEGER PRIMARY KEY,
-			user_id INTEGER,
-			task_id TEXT NULL,
-			task_status TEXT,
-			description TEXT,
-			work_begin INTEGER,
-			work_end INTEGER,
-			date INTEGER
-		)
-	`
-
-	if _, err := c.db.ExecContext(ctx, schema); err != nil {
-		return fmt.Errorf("error migrate tasks table: %s", err.Error())
-	}
-
-	return nil
+func (c *SQLClient) DB() *sqlx.DB {
+	return c.db
 }

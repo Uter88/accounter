@@ -32,4 +32,7 @@ prod: &default
     driver: sqlite3
     dsn: database.sql
 dev: 
+  db:
+    driver: postgres
+    dsn: user=uter password=28031988Uter host=localhost port=5432 dbname=main
   <<: *default

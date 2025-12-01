@@ -38,10 +38,6 @@ func (a *App) Init(ctx context.Context) *App {
 		a.Logger.Fatalln(err)
 	}
 
-	if err := a.DbClient.Migrate(ctx); err != nil {
-		a.Logger.Fatalln(err)
-	}
-
 	return a
 }
 
