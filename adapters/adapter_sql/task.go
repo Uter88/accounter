@@ -29,6 +29,11 @@ func (r *taskRepository) GetList(params *task.TaskParams) ([]task.Task, error) {
 	query := makeGetTaskQuery(params)
 	err := r.namedSelect(ctx, query, &result, params)
 
+	if err != nil {
+		fmt.Println(query)
+		fmt.Println(err.Error())
+	}
+
 	return result, err
 }
 
@@ -109,7 +114,7 @@ const (
 		SELECT
 			t.id,
 			t.user_id,
-			CONCAT_WS(" ", u.surname, u.name) as user_label,
+			CONCAT_WS(' ', u.surname, u.name) as user_label,
 			u.price_per_hour,
 			t.task_id,
 			t.status,

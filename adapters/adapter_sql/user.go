@@ -36,7 +36,7 @@ func (r *userRepository) GetOne(id int64) (u user.User, err error) {
 	ctx, cancel := r.getContext()
 	defer cancel()
 
-	query := fmt.Sprintf("%s WHERE id = ?", getUserQuery)
+	query := fmt.Sprintf("%s WHERE id = $1", getUserQuery)
 	err = r.db().GetContext(ctx, &u, query, id)
 
 	return
