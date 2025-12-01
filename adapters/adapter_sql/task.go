@@ -29,11 +29,6 @@ func (r *taskRepository) GetList(params *task.TaskParams) ([]task.Task, error) {
 	query := makeGetTaskQuery(params)
 	err := r.namedSelect(ctx, query, &result, params)
 
-	if err != nil {
-		fmt.Println(query)
-		fmt.Println(err.Error())
-	}
-
 	return result, err
 }
 
@@ -42,18 +37,18 @@ func (r *taskRepository) GetOne(id int64) (t task.Task, err error) {
 	ctx, cancel := r.getContext()
 	defer cancel()
 
-	query := fmt.Sprintf("%s WHERE t.id = ?", getTaskQuery)
+	query := fmt.Sprintf("%s WHERE t.id = $1", getTaskQuery)
 	err = r.db().GetContext(ctx, &t, query)
 
 	return
 }
 
 // Save Task
-func (r *taskRepository) Save(t *task.Task) error {
+func (r *taskRepository) Insert(t *task.Task) error {
 	ctx, cancel := r.getContext()
 	defer cancel()
 
-	if res, err := r.db().NamedExecContext(ctx, saveTaskQuery, t.ToMap()); err != nil {
+	if res, err := r.db().NamedExecContext(ctx, insertTaskQuery, t); err != nil {
 		return err
 
 	} else if id, _ := res.LastInsertId(); id != 0 {
@@ -61,6 +56,16 @@ func (r *taskRepository) Save(t *task.Task) error {
 	}
 
 	return nil
+}
+
+// Update Task
+func (r *taskRepository) Update(t *task.Task) error {
+	ctx, cancel := r.getContext()
+	defer cancel()
+
+	_, err := r.db().NamedExecContext(ctx, updateTaskQuery, t)
+
+	return err
 }
 
 // Delete Task by id
@@ -125,18 +130,20 @@ const (
 		FROM tasks t
 		JOIN users u ON u.id = t.user_id
 	`
-	deleteTaskQuery = `DELETE FROM tasks WHERE id = ?`
-	saveTaskQuery   = `
-		INSERT INTO tasks
-			(id, user_id, task_id, status, description, work_begin, work_end, date)
-		VALUES (:id, :user_id, :task_id, :status, :description, :work_begin, :work_end, :date)
-			ON CONFLICT(id) DO UPDATE SET
-				user_id=:user_id,
-				task_id=:task_id,
-				status=:status,
-				description=:description,
-				work_begin=:work_begin,
-				work_end=:work_end,
-				date=:date
+	deleteTaskQuery = `DELETE FROM tasks WHERE id = $1`
+	updateTaskQuery = `
+		UPDATE tasks SET
+			user_id=:user_id,
+			task_id=:task_id,
+			status=:status,
+			description=:description,
+			work_begin=:work_begin,
+			work_end=:work_end,
+			date=:date
+		WHERE id = :id
+	`
+	insertTaskQuery = `
+		INSERT INTO tasks (user_id, task_id, status, description, work_begin, work_end, date)
+		VALUES (:user_id, :task_id, :status, :description, :work_begin, :work_end, :date)
 	`
 )

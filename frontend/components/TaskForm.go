@@ -52,6 +52,7 @@ func (tf *TaskForm) makeForm() app.UI {
 		Body(
 			NewInputField[string]().
 				Label("Description").
+				Type("textarea").
 				Value(&tf.data.Description).
 				WrapClass("mt-4").
 				Clearable(true).

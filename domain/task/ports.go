@@ -9,8 +9,11 @@ type TaskRepository interface {
 	// Get one Task
 	GetOne(id int64) (Task, error)
 
-	// Create/update Task
-	Save(*Task) error
+	// Create Task
+	Insert(*Task) error
+
+	// Update Task
+	Update(*Task) error
 
 	// Delete one Task by id
 	Delete(id int64) error

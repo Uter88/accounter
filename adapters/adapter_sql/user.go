@@ -61,11 +61,11 @@ func (r *userRepository) GetByCredentials(login, password string) (u user.User, 
 }
 
 // Save User
-func (r *userRepository) Save(user *user.User) error {
+func (r *userRepository) Insert(user *user.User) error {
 	ctx, cancel := r.getContext()
 	defer cancel()
 
-	if res, err := r.db().NamedExecContext(ctx, saveUserQuery, user); err != nil {
+	if res, err := r.db().NamedExecContext(ctx, insertUserQuery, user); err != nil {
 		return err
 
 	} else if id, _ := res.LastInsertId(); id != 0 {
@@ -73,6 +73,16 @@ func (r *userRepository) Save(user *user.User) error {
 	}
 
 	return nil
+}
+
+// Update one User
+func (r *userRepository) Update(user *user.User) error {
+	ctx, cancel := r.getContext()
+	defer cancel()
+
+	_, err := r.db().NamedExecContext(ctx, insertUserQuery, user)
+
+	return err
 }
 
 // Delete one User by id
@@ -90,17 +100,19 @@ const (
 	getUserQuery = `
 		SELECT id, login, password, name, surname, patronymic, price_per_hour FROM users
 	`
-	deleteUserQuery = `DELETE FROM users WHERE id = ?`
-	saveUserQuery   = `
-		INSERT INTO users
-			(id, login, password, name, surname, patronymic, price_per_hour)
+	deleteUserQuery = `DELETE FROM users WHERE id = $1`
+	insertUserQuery = `
+		INSERT INTO users (login, password, name, surname, patronymic, price_per_hour)
 		VALUES (:id, :login, :password, :name, :surname, :patronymic, :price_per_hour)
-			ON CONFLICT(id) DO UPDATE SET
-				login=:login,
-				password=:password,
-				name=:name,
-				surname=:surname,
-				patronymic=:patronymic,
-				price_per_hour=:price_per_hour
+	`
+	updateUserQuery = `
+		UPDATE users SET
+			login=:login,
+			password=:password,
+			name=:name,
+			surname=:surname,
+			patronymic=:patronymic,
+			price_per_hour=:price_per_hour
+		WHERE id = :id
 	`
 )

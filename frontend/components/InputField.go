@@ -32,6 +32,8 @@ type InputField[T InputValue] struct {
 	readonly    bool
 	pattern     string
 	err         error
+	cols        int
+	rows        int
 
 	loaded bool
 
@@ -57,36 +59,52 @@ func (f *InputField[T]) Render() app.UI {
 		f.loaded = true
 	}
 
-	input := app.Input().
-		Type(f.tp).
-		ID(f.id).
-		Class(f.inputClass, f.getValidCls(), "form-control").
-		Value(*f.Val).
-		Placeholder(f.placeholder).
-		AutoFocus(f.autofocus).
-		ReadOnly(f.readonly)
+	if f.tp == "textarea" {
+		input := app.Textarea().
+			Placeholder(f.placeholder).
+			AutoFocus(f.autofocus).
+			ReadOnly(f.readonly).
+			Class(f.inputClass, f.getValidCls(), "form-control").
+			ID(f.id).
+			Cols(f.cols).
+			Rows(f.rows).
+			Text(*f.Val)
 
-	if f.tp == "number" {
-		if !tools.IsEmpty(f.step) {
-			input.Step(f.step)
+		input.OnInput(f.onInput)
+
+		return f.render(input)
+	} else {
+		input := app.Input().
+			Type(f.tp).
+			ID(f.id).
+			Class(f.inputClass, f.getValidCls(), "form-control").
+			Value(*f.Val).
+			Placeholder(f.placeholder).
+			AutoFocus(f.autofocus).
+			ReadOnly(f.readonly)
+
+		if f.tp == "number" {
+			if !tools.IsEmpty(f.step) {
+				input.Step(f.step)
+			}
+
+			if !tools.IsEmpty(f.min) {
+				input.Min(f.min)
+			}
+
+			if !tools.IsEmpty(f.max) {
+				input.Max(f.max)
+			}
 		}
 
-		if !tools.IsEmpty(f.min) {
-			input.Min(f.min)
+		if !tools.IsEmpty(f.pattern) {
+			input.Pattern(f.pattern)
 		}
 
-		if !tools.IsEmpty(f.max) {
-			input.Max(f.max)
-		}
+		input.OnInput(f.onInput)
+
+		return f.render(input)
 	}
-
-	if !tools.IsEmpty(f.pattern) {
-		input.Pattern(f.pattern)
-	}
-
-	input.OnInput(f.onInput)
-
-	return f.render(input)
 }
 
 func (f *InputField[T]) onInput(ctx app.Context, e app.Event) {
@@ -219,7 +237,7 @@ func (f *InputField[T]) PrependIcon(value string) *InputField[T] {
 	return f
 }
 
-func (f *InputField[T]) render(input app.HTMLInput) app.UI {
+func (f *InputField[T]) render(input app.UI) app.UI {
 	return NewInputWrapper(f.id).
 		Label(f.label).
 		LabelClass(f.labelClass).

@@ -14,14 +14,18 @@ func NewUserService(repo UserRepository) UserService {
 
 // GetUsersList get list of User
 func (s *UserService) GetUsersList() ([]User, error) {
-	users, err := s.repo.GetList()
+	result, err := s.repo.GetList()
 
-	return users, err
+	return result, err
 }
 
 // SaveUser create/update User
 func (s *UserService) SaveUser(user *User) error {
-	return s.repo.Save(user)
+	if tools.IsEmpty(user.ID) {
+		return s.repo.Insert(user)
+	}
+
+	return s.repo.Update(user)
 }
 
 // DeleteUser delete User by id

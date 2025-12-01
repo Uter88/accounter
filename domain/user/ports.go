@@ -9,8 +9,11 @@ type UserRepository interface {
 	// Get one User by id
 	GetOne(id int64) (User, error)
 
-	// Create/update User
-	Save(*User) error
+	// Create User
+	Insert(*User) error
+
+	// Update User
+	Update(*User) error
 
 	// Delete one User by id
 	Delete(id int64) error

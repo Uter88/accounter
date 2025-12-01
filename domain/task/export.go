@@ -3,7 +3,6 @@ package task
 import (
 	"accounter/pkg/tools"
 	"bytes"
-	"errors"
 	"fmt"
 	"html/template"
 )
@@ -24,34 +23,6 @@ type exportRow struct {
 	WorkBegin   string
 	WorkEnd     string
 	Price       float32
-}
-
-// Export tasks to specified format
-func exportTasks(tasks Tasks, format tools.FileFormat) (*bytes.Buffer, error) {
-	data := tasksToExportData(tasks)
-
-	switch format {
-	case tools.FileFormatCSV:
-		return data.convertToCSV()
-
-	case tools.FileFormatDocX:
-		return data.convertToDocX()
-
-	case tools.FileFormatXLSX:
-		return data.convertToXLSX()
-
-	case tools.FileFormatPDF:
-		return data.convertToPDF()
-
-	case tools.FileFormatJSON:
-		return data.convertToJSON()
-
-	case tools.FileFormatHTML:
-		return data.convertToHTML()
-
-	default:
-		return nil, errors.New("unexpected file format")
-	}
 }
 
 // Convert Tasks to exportData
