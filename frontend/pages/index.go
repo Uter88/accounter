@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"accounter/domain/user"
 	"accounter/frontend/common"
 	"accounter/frontend/components"
 
@@ -19,23 +18,11 @@ func NewIndexPage(ctx common.AppContext) *indexPage {
 	}
 }
 
-func (inp *indexPage) requestUsers(ctx app.Context) {
-	inp.EnableNotifications(ctx)
-
-	if err := inp.Ctx.Store.RequestUsers(); err != nil {
-		inp.ShowNotification(ctx, "Error", err.Error())
-	} else {
-		inp.ShowNotification(ctx, "Info", "Users loaded success!")
-	}
-}
-
 func (inp *indexPage) OnMount(ctx app.Context) {
 	if !inp.Ctx.Store.CheckAuth(ctx) {
 		ctx.Navigate("/login")
 		return
 	}
-
-	inp.requestUsers(ctx)
 }
 
 func (inp *indexPage) GroupBtn() app.HTMLDiv {
@@ -53,16 +40,6 @@ func (inp *indexPage) GroupBtn() app.HTMLDiv {
 }
 
 func (inp *indexPage) Render() app.UI {
-	usersTable := components.NewUserList(inp.Ctx, inp.Ctx.Store.GetUsers()).
-		Loading(inp.Ctx.Store.GetUsersLoading()).
-		OnRequest(inp.requestUsers).
-		OnEdit(func(ctx app.Context, u user.User) {
-			ctx.NewActionWithValue("setUser", u)
-		}).
-		OnAdd(func(ctx app.Context) {
-			ctx.NewActionWithValue("setUser", user.User{})
-		})
-
 	return app.Main().
 		Class("d-flex w-100 h-100 flex-column").
 		Body(
@@ -84,7 +61,7 @@ func (inp *indexPage) Render() app.UI {
 								Class("card p-1 d-flex h-50 flex-column align-items-center mx-3").
 								Body(
 									components.NewUserForm(inp.Ctx, false),
-									usersTable,
+									components.NewUserList(inp.Ctx, inp.Ctx.Store.GetUsers()),
 								),
 
 							components.NewTasksChart(inp.Ctx.Store.GetTasks(), inp.Ctx.Store.GetTaskParams()),

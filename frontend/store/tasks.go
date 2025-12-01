@@ -12,11 +12,15 @@ import (
 type tasksStore struct {
 	*baseStore
 
-	tasks  task.Tasks
-	params *task.TaskParams
+	tasks   task.Tasks
+	params  *task.TaskParams
+	loading bool
 }
 
 func (s *tasksStore) RequestTasks(ctx app.Context) error {
+	s.setLoading(true)
+	defer s.setLoading(false)
+
 	resp, errResp, err := newRequest[task.Tasks](*s.baseStore).
 		Path("tasks/list").
 		Params(s.params.Encode()).
@@ -82,4 +86,12 @@ func (s *tasksStore) SetTaskParams(p *task.TaskParams) {
 
 func (s *tasksStore) GetTaskParams() *task.TaskParams {
 	return s.params
+}
+
+func (s *tasksStore) GetTasksLoading() bool {
+	return s.loading
+}
+
+func (s *tasksStore) setLoading(v bool) {
+	s.loading = v
 }

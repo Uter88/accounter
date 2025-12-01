@@ -52,16 +52,18 @@ func (a *App) Run(ctx context.Context) error {
 			Title:       "AccApp",
 			Description: "Accounter application",
 			Styles: []string{
-				"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
-				"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200",
+				"/web/styles/bootstrap.min.css",
+				//"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200",
 				"/web/styles/base.css",
 				"/web/styles/popups.css",
 				"/web/styles/components.css",
 			},
+			//Fonts: []string{"/web/fonts/material.woff2"},
+
 			Scripts: []string{
 				"/web/js/main.js",
 				"/web/js/echarts/echarts.min.js",
-				"https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js",
+				"/web/js/bootstrap.bundle.min.js",
 			},
 		},
 	}
