@@ -26,7 +26,7 @@ type Config struct {
 
 	// JWT secret key salt
 	SecretKey   string        `yaml:"secret_key"`
-	TokenExpire time.Duration `yam:"token_expire"`
+	TokenExpire time.Duration `yaml:"token_expire"`
 
 	// Frontend config
 	Client struct {
@@ -34,23 +34,25 @@ type Config struct {
 	} `yaml:"client"`
 
 	// Backend HTTP config
-	HTTP struct {
-		Host             string        `yaml:"host"`
-		Port             uint          `yaml:"port"`
-		AllowOrigins     []string      `yaml:"allow_origins"`
-		AllowHeaders     []string      `yaml:"allow_headers"`
-		AllowMethods     []string      `yaml:"allow_methods"`
-		AllowWildcard    bool          `yaml:"allow_wildcard"`
-		AllowCredentials bool          `yaml:"allow_credentials"`
-		ExposeHeaders    []string      `yaml:"expose_headers"`
-		MaxAge           time.Duration `yaml:"max_age"`
-	} `yaml:"http"`
+	HTTP HTTPConfig `yaml:"http"`
 
 	// Database config
 	DB struct {
 		Driver string `yaml:"driver"`
 		DSN    string `yaml:"dsn"`
 	} `yaml:"db"`
+}
+
+type HTTPConfig struct {
+	Host             string        `yaml:"host"`
+	Port             uint          `yaml:"port"`
+	AllowOrigins     []string      `yaml:"allow_origins"`
+	AllowHeaders     []string      `yaml:"allow_headers"`
+	AllowMethods     []string      `yaml:"allow_methods"`
+	AllowWildcard    bool          `yaml:"allow_wildcard"`
+	AllowCredentials bool          `yaml:"allow_credentials"`
+	ExposeHeaders    []string      `yaml:"expose_headers"`
+	MaxAge           time.Duration `yaml:"max_age"`
 }
 
 // InitConfig parse args and load config from YAML file

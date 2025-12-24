@@ -1,7 +1,7 @@
 package adapter_sql
 
 import (
-	"accounter/domain/task"
+	"accounter/internal/domain/task"
 	"accounter/pkg/tools"
 	"context"
 	"fmt"
@@ -14,15 +14,15 @@ type taskRepository struct {
 }
 
 // Creates new taskRepository
-func NewTaskRepository(ctx context.Context, client SQLClient) *taskRepository {
+func NewTaskRepository(client SQLClient) *taskRepository {
 	return &taskRepository{
-		baseRepository: newBaseRepository(ctx, client),
+		baseRepository: newBaseRepository(client),
 	}
 }
 
 // Get list of Task
-func (r *taskRepository) GetList(params *task.TaskParams) ([]task.Task, error) {
-	ctx, cancel := r.getContext()
+func (r *taskRepository) GetList(ctx context.Context, params *task.TaskParams) ([]task.Task, error) {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	result := make([]task.Task, 0)
@@ -33,22 +33,22 @@ func (r *taskRepository) GetList(params *task.TaskParams) ([]task.Task, error) {
 }
 
 // Get one Task by id
-func (r *taskRepository) GetOne(id int64) (t task.Task, err error) {
-	ctx, cancel := r.getContext()
+func (r *taskRepository) GetOne(ctx context.Context, id int64) (t task.Task, err error) {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
-	query := fmt.Sprintf("%s WHERE t.id = ?", getTaskQuery)
+	query := fmt.Sprintf("%s WHERE t.id = $1", getTaskQuery)
 	err = r.db().GetContext(ctx, &t, query)
 
 	return
 }
 
 // Save Task
-func (r *taskRepository) Save(t *task.Task) error {
-	ctx, cancel := r.getContext()
+func (r *taskRepository) Insert(ctx context.Context, t *task.Task) error {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
-	if res, err := r.db().NamedExecContext(ctx, saveTaskQuery, t.ToMap()); err != nil {
+	if res, err := r.db().NamedExecContext(ctx, insertTaskQuery, t); err != nil {
 		return err
 
 	} else if id, _ := res.LastInsertId(); id != 0 {
@@ -58,9 +58,19 @@ func (r *taskRepository) Save(t *task.Task) error {
 	return nil
 }
 
+// Update Task
+func (r *taskRepository) Update(ctx context.Context, t *task.Task) error {
+	ctx, cancel := r.getContext(ctx)
+	defer cancel()
+
+	_, err := r.db().NamedExecContext(ctx, updateTaskQuery, t)
+
+	return err
+}
+
 // Delete Task by id
-func (r *taskRepository) Delete(id int64) error {
-	ctx, cancel := r.getContext()
+func (r *taskRepository) Delete(ctx context.Context, id int64) error {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	_, err := r.db().ExecContext(ctx, deleteTaskQuery, id)
@@ -109,7 +119,7 @@ const (
 		SELECT
 			t.id,
 			t.user_id,
-			CONCAT_WS(" ", u.surname, u.name) as user_label,
+			CONCAT_WS(' ', u.surname, u.name) as user_label,
 			u.price_per_hour,
 			t.task_id,
 			t.status,
@@ -120,18 +130,20 @@ const (
 		FROM tasks t
 		JOIN users u ON u.id = t.user_id
 	`
-	deleteTaskQuery = `DELETE FROM tasks WHERE id = ?`
-	saveTaskQuery   = `
-		INSERT INTO tasks
-			(id, user_id, task_id, status, description, work_begin, work_end, date)
-		VALUES (:id, :user_id, :task_id, :status, :description, :work_begin, :work_end, :date)
-			ON CONFLICT(id) DO UPDATE SET
-				user_id=:user_id,
-				task_id=:task_id,
-				status=:status,
-				description=:description,
-				work_begin=:work_begin,
-				work_end=:work_end,
-				date=:date
+	deleteTaskQuery = `DELETE FROM tasks WHERE id = $1`
+	updateTaskQuery = `
+		UPDATE tasks SET
+			user_id=:user_id,
+			task_id=:task_id,
+			status=:status,
+			description=:description,
+			work_begin=:work_begin,
+			work_end=:work_end,
+			date=:date
+		WHERE id = :id
+	`
+	insertTaskQuery = `
+		INSERT INTO tasks (user_id, task_id, status, description, work_begin, work_end, date)
+		VALUES (:user_id, :task_id, :status, :description, :work_begin, :work_end, :date)
 	`
 )

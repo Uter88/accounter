@@ -1,6 +1,6 @@
 prod: &default
   secret_key: 48716746efd74c80b72175f17e40224f
-  token_expire: 30d
+  token_expire: 744h
 
   client:
     port: 8000
@@ -29,7 +29,7 @@ prod: &default
       - Content-Disposition
     max_age: 12h
   db:
-    driver: sqlite3
-    dsn: database.sql
+    driver: postgres
+    dsn: user=uter password=28031988Uter host=192.168.0.107 port=5432 dbname=main
 dev: 
   <<: *default

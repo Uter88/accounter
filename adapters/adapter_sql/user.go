@@ -1,7 +1,7 @@
 package adapter_sql
 
 import (
-	"accounter/domain/user"
+	"accounter/internal/domain/user"
 	"accounter/pkg/tools"
 	"context"
 	"fmt"
@@ -13,15 +13,15 @@ type userRepository struct {
 }
 
 // Creates new userRepository
-func NewUserRepository(ctx context.Context, client SQLClient) *userRepository {
+func NewUserRepository(client SQLClient) *userRepository {
 	return &userRepository{
-		baseRepository: newBaseRepository(ctx, client),
+		baseRepository: newBaseRepository(client),
 	}
 }
 
 // Get list of User
-func (r *userRepository) GetList() ([]user.User, error) {
-	ctx, cancel := r.getContext()
+func (r *userRepository) GetList(ctx context.Context) ([]user.User, error) {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	result := make([]user.User, 0)
@@ -32,19 +32,19 @@ func (r *userRepository) GetList() ([]user.User, error) {
 }
 
 // Get one User by id
-func (r *userRepository) GetOne(id int64) (u user.User, err error) {
-	ctx, cancel := r.getContext()
+func (r *userRepository) GetOne(ctx context.Context, id int64) (u user.User, err error) {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
-	query := fmt.Sprintf("%s WHERE id = ?", getUserQuery)
+	query := fmt.Sprintf("%s WHERE id = $1", getUserQuery)
 	err = r.db().GetContext(ctx, &u, query, id)
 
 	return
 }
 
 // Get one User by login
-func (r *userRepository) GetByCredentials(login, password string) (u user.User, err error) {
-	ctx, cancel := r.getContext()
+func (r *userRepository) GetByCredentials(ctx context.Context, login, password string) (u user.User, err error) {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	cond := "WHERE login = :login"
@@ -61,11 +61,11 @@ func (r *userRepository) GetByCredentials(login, password string) (u user.User, 
 }
 
 // Save User
-func (r *userRepository) Save(user *user.User) error {
-	ctx, cancel := r.getContext()
+func (r *userRepository) Insert(ctx context.Context, user *user.User) error {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
-	if res, err := r.db().NamedExecContext(ctx, saveUserQuery, user); err != nil {
+	if res, err := r.db().NamedExecContext(ctx, insertUserQuery, user); err != nil {
 		return err
 
 	} else if id, _ := res.LastInsertId(); id != 0 {
@@ -75,9 +75,19 @@ func (r *userRepository) Save(user *user.User) error {
 	return nil
 }
 
+// Update one User
+func (r *userRepository) Update(ctx context.Context, user *user.User) error {
+	ctx, cancel := r.getContext(ctx)
+	defer cancel()
+
+	_, err := r.db().NamedExecContext(ctx, insertUserQuery, user)
+
+	return err
+}
+
 // Delete one User by id
-func (r *userRepository) Delete(id int64) error {
-	ctx, cancel := r.getContext()
+func (r *userRepository) Delete(ctx context.Context, id int64) error {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	_, err := r.db().ExecContext(ctx, deleteUserQuery, id)
@@ -90,17 +100,19 @@ const (
 	getUserQuery = `
 		SELECT id, login, password, name, surname, patronymic, price_per_hour FROM users
 	`
-	deleteUserQuery = `DELETE FROM users WHERE id = ?`
-	saveUserQuery   = `
-		INSERT INTO users
-			(id, login, password, name, surname, patronymic, price_per_hour)
+	deleteUserQuery = `DELETE FROM users WHERE id = $1`
+	insertUserQuery = `
+		INSERT INTO users (login, password, name, surname, patronymic, price_per_hour)
 		VALUES (:id, :login, :password, :name, :surname, :patronymic, :price_per_hour)
-			ON CONFLICT(id) DO UPDATE SET
-				login=:login,
-				password=:password,
-				name=:name,
-				surname=:surname,
-				patronymic=:patronymic,
-				price_per_hour=:price_per_hour
+	`
+	updateUserQuery = `
+		UPDATE users SET
+			login=:login,
+			password=:password,
+			name=:name,
+			surname=:surname,
+			patronymic=:patronymic,
+			price_per_hour=:price_per_hour
+		WHERE id = :id
 	`
 )

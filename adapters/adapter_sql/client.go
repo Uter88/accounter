@@ -6,23 +6,22 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 // Base SQL repository
 type baseRepository struct {
-	ctx    context.Context
 	client SQLClient
 }
 
 // Creates new baseRepository
-func newBaseRepository(ctx context.Context, client SQLClient) baseRepository {
-	return baseRepository{ctx: ctx, client: client}
+func newBaseRepository(client SQLClient) baseRepository {
+	return baseRepository{client: client}
 }
 
 // Creates timeout context with cancel func
-func (r *baseRepository) getContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(r.ctx, time.Minute*5)
+func (r *baseRepository) getContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(ctx, time.Minute*5)
 }
 
 func (r *baseRepository) namedGet(ctx context.Context, query string, dest any, args any) error {
@@ -67,7 +66,7 @@ func (c *SQLClient) Connect(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*20)
 	defer cancel()
 
-	if conn, err := sqlx.ConnectContext(ctx, c.driver, c.dsn); err != nil {
+	if conn, err := sqlx.Open(c.driver, c.dsn); err != nil {
 		return fmt.Errorf("could not create %s DB connection pool: %s", c.driver, err.Error())
 
 	} else if err = conn.PingContext(ctx); err != nil {
@@ -88,42 +87,6 @@ func (c *SQLClient) Disconnect() error {
 	return nil
 }
 
-// Migrate tables chemas
-func (c *SQLClient) Migrate(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Second*20)
-	defer cancel()
-
-	schema := `CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY,
-		login TEXT,
-		password TEXT,
-		name TEXT,
-		surname TEXT,
-		patronymic TEXT,
-		price_per_hour REAL
-	);`
-
-	// execute a query on the server
-	if _, err := c.db.ExecContext(ctx, schema); err != nil {
-		return fmt.Errorf("error migrate users table: %s", err.Error())
-	}
-
-	schema = `
-		CREATE TABLE IF NOT EXISTS tasks (
-			id INTEGER PRIMARY KEY,
-			user_id INTEGER,
-			task_id TEXT NULL,
-			task_status TEXT,
-			description TEXT,
-			work_begin INTEGER,
-			work_end INTEGER,
-			date INTEGER
-		)
-	`
-
-	if _, err := c.db.ExecContext(ctx, schema); err != nil {
-		return fmt.Errorf("error migrate tasks table: %s", err.Error())
-	}
-
-	return nil
+func (c *SQLClient) DB() *sqlx.DB {
+	return c.db
 }
