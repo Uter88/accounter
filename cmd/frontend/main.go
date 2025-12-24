@@ -3,6 +3,7 @@ package main
 import (
 	wasmgoap "accounter/adapters/ui/wasm-goap"
 	"accounter/config"
+	"accounter/pkg/logger"
 )
 
 func main() {
@@ -13,10 +14,10 @@ func main() {
 	cfg := config.InitConfig()
 
 	// Create logger
-	logger := config.NewLogger(cfg.DebugMode, cfg.AppMode, "logs")
+	logger := logger.NewLogger(cfg.DebugMode, cfg.AppMode, "logs")
 
 	// Create frontend application instance
-	frontApp := wasmgoap.NewApp(cfg, *logger)
+	frontApp := wasmgoap.NewApp(cfg, logger)
 
 	// Defer canceling and shutdown application
 	defer cancel()

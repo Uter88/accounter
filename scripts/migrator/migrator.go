@@ -3,6 +3,7 @@ package main
 import (
 	"accounter/adapters/adapter_sql"
 	"accounter/config"
+	"accounter/pkg/logger"
 )
 
 const SQLiteUserSchema = `CREATE TABLE IF NOT EXISTS users (
@@ -57,7 +58,7 @@ const PostgresTaskSchema = `
 func main() {
 	ctx, cancel := config.InitGracefulShutdownCtx()
 	cfg := config.InitConfig()
-	logger := config.NewLogger(cfg.DebugMode, cfg.AppMode, "logs")
+	logger := logger.NewLogger(cfg.DebugMode, cfg.AppMode, "logs")
 	client := adapter_sql.NewSQLClient(cfg.DB.Driver, cfg.DB.DSN)
 
 	if err := client.Connect(ctx); err != nil {

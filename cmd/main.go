@@ -4,6 +4,7 @@ import (
 	wasmgoap "accounter/adapters/ui/wasm-goap"
 	"accounter/config"
 	"accounter/internal/app"
+	"accounter/pkg/logger"
 	"errors"
 	"fmt"
 	"regexp"
@@ -20,13 +21,13 @@ func main() {
 	cfg := config.InitConfig()
 
 	// Create logger
-	logger := config.NewLogger(cfg.DebugMode, cfg.AppMode, "logs")
+	logger := logger.NewLogger(cfg.DebugMode, cfg.AppMode, "logs")
 
 	// Create frontend application instance
-	frontApp := wasmgoap.NewApp(cfg, *logger)
+	frontApp := wasmgoap.NewApp(cfg, logger)
 
 	// Create AppContext instance and init it
-	backendApp := app.NewAppContext(ctx, cfg, *logger).Init(ctx)
+	backendApp := app.NewAppContext(ctx, cfg, logger).Init(ctx)
 
 	// Register background tasks
 	backendApp.RegisterTask("Frontend HTTP server", &frontApp)

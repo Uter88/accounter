@@ -9,6 +9,7 @@ import (
 	"accounter/config"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
+	"accounter/pkg/logger"
 	"context"
 )
 
@@ -19,7 +20,7 @@ type AppContext struct {
 	config config.Config
 
 	// Default logger
-	logger config.Logger
+	logger logger.Logger
 
 	// Database client
 	db adapter_sql.SQLClient
@@ -109,7 +110,7 @@ func (a *AppContext) Shutdown() {
 }
 
 // NewAppContext creates new AppContext
-func NewAppContext(ctx context.Context, cfg config.Config, logger config.Logger) *AppContext {
+func NewAppContext(ctx context.Context, cfg config.Config, logger logger.Logger) *AppContext {
 	return &AppContext{
 		config: cfg,
 		logger: logger,
