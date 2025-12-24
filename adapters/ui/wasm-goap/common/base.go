@@ -3,6 +3,7 @@ package common
 import (
 	"accounter/adapters/ui/wasm-goap/store"
 	"accounter/config"
+	"accounter/pkg/logger"
 
 	"context"
 
@@ -47,6 +48,6 @@ func (h *BaseComponent) ShowConfirm(ctx app.Context, title string) bool {
 type AppContext struct {
 	context.Context
 	Store  *store.Store
-	Logger config.Logger
+	Logger logger.Logger
 	Config config.Config
 }

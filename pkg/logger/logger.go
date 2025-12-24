@@ -1,4 +1,4 @@
-package config
+package logger
 
 import (
 	"bytes"
@@ -9,8 +9,10 @@ import (
 	"text/template"
 )
 
+// Log flags
 const logsFlag = log.Ldate | log.Ltime
 
+// Print colors
 const (
 	prefixInfo    = "\033[32m[INFO]: "
 	prefixDebug   = "\033[34m[DEBUG]: "
@@ -25,19 +27,18 @@ type Logger struct {
 	InfoOut  *log.Logger
 	WarnOut  *log.Logger
 	DebugOut *log.Logger
-
-	outputs []*os.File
+	outputs  []*os.File
 }
 
 // Close all output files
-func (l *Logger) Close() {
+func (l Logger) Close() {
 	for _, out := range l.outputs {
 		out.Close()
 	}
 }
 
 // NamedFmt named strings formatter
-func (l *Logger) NamedFmt(msg string, args any) string {
+func (l Logger) NamedFmt(msg string, args any) string {
 	t, err := template.New("").Parse(msg)
 
 	if err != nil {
@@ -54,58 +55,58 @@ func (l *Logger) NamedFmt(msg string, args any) string {
 }
 
 // Info log any messages
-func (l *Logger) Printf(format string, args ...interface{}) {
+func (l Logger) Printf(format string, args ...any) {
 	l.ErrOut.Printf(format, args...)
 }
 
 // Info log INFO messages
-func (l *Logger) Info(val ...interface{}) {
+func (l Logger) Info(val ...any) {
 	l.InfoOut.Println(val...)
 }
 
 // Infof log formated INFO messages
-func (l *Logger) Infof(format string, args ...interface{}) {
+func (l Logger) Infof(format string, args ...any) {
 	l.Info(fmt.Sprintf(format, args...))
 }
 
 // Warn log WARN messages
-func (l *Logger) Warn(val ...interface{}) {
+func (l Logger) Warn(val ...any) {
 	l.WarnOut.Println(val...)
 }
 
 // Warnf log formated WARN messages
-func (l *Logger) Warnf(format string, args ...interface{}) {
+func (l Logger) Warnf(format string, args ...any) {
 	l.Warn(fmt.Sprintf(format, args...))
 }
 
 // Debug log DEBUG messages
-func (l *Logger) Debug(val ...interface{}) {
+func (l Logger) Debug(val ...any) {
 	l.DebugOut.Println(val...)
 }
 
 // Debugf log formated DEBUG messages
-func (l *Logger) Debugf(format string, args ...interface{}) {
+func (l Logger) Debugf(format string, args ...any) {
 	l.Debug(fmt.Sprintf(format, args...))
 }
 
 // Error log ERROR messages
-func (l *Logger) Error(val ...interface{}) {
+func (l Logger) Error(val ...any) {
 	l.ErrOut.Println(val...)
 }
 
 // Errorf log formated ERROR messages
-func (l *Logger) Errorf(format string, args ...interface{}) {
+func (l Logger) Errorf(format string, args ...any) {
 	l.Error(fmt.Sprintf(format, args...))
 }
 
 // Fatalln log ERROR messages and call os.Exit(1)
-func (l *Logger) Fatalln(args ...interface{}) {
+func (l Logger) Fatalln(args ...any) {
 	l.Error(args...)
 	os.Exit(1)
 }
 
 // Fatalf log formated ERROR messages and call os.Exit(1)
-func (l *Logger) Fatalf(format string, args ...interface{}) {
+func (l Logger) Fatalf(format string, args ...any) {
 	l.Errorf(format, args...)
 	os.Exit(1)
 }
@@ -113,8 +114,8 @@ func (l *Logger) Fatalf(format string, args ...interface{}) {
 // NewLogger create new Logger instance
 // In debug mode write DEBUG logs into stdout, otherwise into dev/null
 // In prod mode write INFO, WARNNING, ERROR into output files
-func NewLogger(debug bool, appMode string, logsPath string) *Logger {
-	l := new(Logger)
+func NewLogger(debug bool, appMode string, logsPath string) Logger {
+	var l Logger
 
 	l.WarnOut = log.New(os.Stdout, prefixWarning, logsFlag)
 	l.InfoOut = log.New(os.Stdout, prefixInfo, logsFlag)

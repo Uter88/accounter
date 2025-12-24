@@ -5,6 +5,7 @@ import (
 	"accounter/config"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
+	"accounter/pkg/logger"
 	"accounter/pkg/tools"
 	"bytes"
 	"context"
@@ -17,7 +18,7 @@ import (
 // API engine version 1
 type v1Engine struct {
 	cfg    config.Config
-	logger config.Logger
+	logger logger.Logger
 
 	TaskService task.TaskService
 	UserService user.UserService
@@ -31,7 +32,7 @@ type AuthService interface {
 }
 
 // Creates new v1Engine
-func NewEngine(cfg config.Config, logger config.Logger) v1Engine {
+func NewEngine(cfg config.Config, logger logger.Logger) v1Engine {
 	return v1Engine{cfg: cfg, logger: logger}
 }
 

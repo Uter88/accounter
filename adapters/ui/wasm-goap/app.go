@@ -5,6 +5,7 @@ import (
 	"accounter/adapters/ui/wasm-goap/pages"
 	"accounter/adapters/ui/wasm-goap/store"
 	"accounter/config"
+	"accounter/pkg/logger"
 
 	"context"
 	"fmt"
@@ -19,7 +20,7 @@ type App struct {
 	ctx common.AppContext
 }
 
-func NewApp(config config.Config, logger config.Logger) App {
+func NewApp(config config.Config, logger logger.Logger) App {
 	return App{
 		ctx: common.AppContext{
 			Config: config,

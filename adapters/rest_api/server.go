@@ -2,6 +2,7 @@ package restapi
 
 import (
 	"accounter/config"
+	"accounter/pkg/logger"
 	"context"
 	"fmt"
 	"net"
@@ -16,11 +17,11 @@ import (
 type Server struct {
 	http.Server
 	cfg    config.Config
-	logger config.Logger
+	logger logger.Logger
 }
 
 // Creates new Server instance
-func NewServer(ctx context.Context, cfg config.Config, logger config.Logger) *Server {
+func NewServer(ctx context.Context, cfg config.Config, logger logger.Logger) *Server {
 	if cfg.DebugMode {
 		gin.SetMode(gin.DebugMode)
 	} else {
