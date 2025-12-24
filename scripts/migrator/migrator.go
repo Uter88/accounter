@@ -28,15 +28,16 @@ const SQLiteTaskSchema = `
 	)
 `
 
-const PostgresUserSchema = `CREATE TABLE IF NOT EXISTS public.users (
-    id BIGSERIAL NOT NULL,
-    login CHARACTER VARYING(50) NOT NULL,
-    password CHARACTER VARYING(50) NOT NULL,
-    name CHARACTER VARYING(50) NOT NULL,
-    surname CHARACTER VARYING(50) NOT NULL,
-    patronymic CHARACTER VARYING(50) NOT NULL,
-    price_per_hour NUMERIC(12, 2) NOT NULL,
-    PRIMARY KEY (id)
+const PostgresUserSchema = `
+	CREATE TABLE IF NOT EXISTS public.users (
+		id BIGSERIAL NOT NULL,
+		login CHARACTER VARYING(50) NOT NULL,
+		password CHARACTER VARYING(50) NOT NULL,
+		name CHARACTER VARYING(50) NOT NULL,
+		surname CHARACTER VARYING(50) NOT NULL,
+		patronymic CHARACTER VARYING(50) NOT NULL,
+		price_per_hour NUMERIC(12, 2) NOT NULL,
+		PRIMARY KEY (id)
 );`
 
 const PostgresTaskSchema = `
@@ -49,7 +50,7 @@ const PostgresTaskSchema = `
     	work_begin BIGINT NOT NULL,
     	work_end BIGINT NOT NULL,
 		date BIGINT NOT NULL,
-    PRIMARY KEY (id)
+    	PRIMARY KEY (id)
 	)
 `
 

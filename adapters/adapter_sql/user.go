@@ -1,7 +1,7 @@
 package adapter_sql
 
 import (
-	"accounter/domain/user"
+	"accounter/internal/domain/user"
 	"accounter/pkg/tools"
 	"context"
 	"fmt"
@@ -13,15 +13,15 @@ type userRepository struct {
 }
 
 // Creates new userRepository
-func NewUserRepository(ctx context.Context, client SQLClient) *userRepository {
+func NewUserRepository(client SQLClient) *userRepository {
 	return &userRepository{
-		baseRepository: newBaseRepository(ctx, client),
+		baseRepository: newBaseRepository(client),
 	}
 }
 
 // Get list of User
-func (r *userRepository) GetList() ([]user.User, error) {
-	ctx, cancel := r.getContext()
+func (r *userRepository) GetList(ctx context.Context) ([]user.User, error) {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	result := make([]user.User, 0)
@@ -32,8 +32,8 @@ func (r *userRepository) GetList() ([]user.User, error) {
 }
 
 // Get one User by id
-func (r *userRepository) GetOne(id int64) (u user.User, err error) {
-	ctx, cancel := r.getContext()
+func (r *userRepository) GetOne(ctx context.Context, id int64) (u user.User, err error) {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	query := fmt.Sprintf("%s WHERE id = $1", getUserQuery)
@@ -43,8 +43,8 @@ func (r *userRepository) GetOne(id int64) (u user.User, err error) {
 }
 
 // Get one User by login
-func (r *userRepository) GetByCredentials(login, password string) (u user.User, err error) {
-	ctx, cancel := r.getContext()
+func (r *userRepository) GetByCredentials(ctx context.Context, login, password string) (u user.User, err error) {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	cond := "WHERE login = :login"
@@ -61,8 +61,8 @@ func (r *userRepository) GetByCredentials(login, password string) (u user.User, 
 }
 
 // Save User
-func (r *userRepository) Insert(user *user.User) error {
-	ctx, cancel := r.getContext()
+func (r *userRepository) Insert(ctx context.Context, user *user.User) error {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	if res, err := r.db().NamedExecContext(ctx, insertUserQuery, user); err != nil {
@@ -76,8 +76,8 @@ func (r *userRepository) Insert(user *user.User) error {
 }
 
 // Update one User
-func (r *userRepository) Update(user *user.User) error {
-	ctx, cancel := r.getContext()
+func (r *userRepository) Update(ctx context.Context, user *user.User) error {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	_, err := r.db().NamedExecContext(ctx, insertUserQuery, user)
@@ -86,8 +86,8 @@ func (r *userRepository) Update(user *user.User) error {
 }
 
 // Delete one User by id
-func (r *userRepository) Delete(id int64) error {
-	ctx, cancel := r.getContext()
+func (r *userRepository) Delete(ctx context.Context, id int64) error {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	_, err := r.db().ExecContext(ctx, deleteUserQuery, id)

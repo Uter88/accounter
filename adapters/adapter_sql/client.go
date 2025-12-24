@@ -7,23 +7,21 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // Base SQL repository
 type baseRepository struct {
-	ctx    context.Context
 	client SQLClient
 }
 
 // Creates new baseRepository
-func newBaseRepository(ctx context.Context, client SQLClient) baseRepository {
-	return baseRepository{ctx: ctx, client: client}
+func newBaseRepository(client SQLClient) baseRepository {
+	return baseRepository{client: client}
 }
 
 // Creates timeout context with cancel func
-func (r *baseRepository) getContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(r.ctx, time.Minute*5)
+func (r *baseRepository) getContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(ctx, time.Minute*5)
 }
 
 func (r *baseRepository) namedGet(ctx context.Context, query string, dest any, args any) error {

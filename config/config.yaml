@@ -1,6 +1,6 @@
 prod: &default
   secret_key: 48716746efd74c80b72175f17e40224f
-  token_expire: 30d
+  token_expire: 744h
 
   client:
     port: 8000

@@ -1,7 +1,7 @@
 package adapter_sql
 
 import (
-	"accounter/domain/task"
+	"accounter/internal/domain/task"
 	"accounter/pkg/tools"
 	"context"
 	"fmt"
@@ -14,15 +14,15 @@ type taskRepository struct {
 }
 
 // Creates new taskRepository
-func NewTaskRepository(ctx context.Context, client SQLClient) *taskRepository {
+func NewTaskRepository(client SQLClient) *taskRepository {
 	return &taskRepository{
-		baseRepository: newBaseRepository(ctx, client),
+		baseRepository: newBaseRepository(client),
 	}
 }
 
 // Get list of Task
-func (r *taskRepository) GetList(params *task.TaskParams) ([]task.Task, error) {
-	ctx, cancel := r.getContext()
+func (r *taskRepository) GetList(ctx context.Context, params *task.TaskParams) ([]task.Task, error) {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	result := make([]task.Task, 0)
@@ -33,8 +33,8 @@ func (r *taskRepository) GetList(params *task.TaskParams) ([]task.Task, error) {
 }
 
 // Get one Task by id
-func (r *taskRepository) GetOne(id int64) (t task.Task, err error) {
-	ctx, cancel := r.getContext()
+func (r *taskRepository) GetOne(ctx context.Context, id int64) (t task.Task, err error) {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	query := fmt.Sprintf("%s WHERE t.id = $1", getTaskQuery)
@@ -44,8 +44,8 @@ func (r *taskRepository) GetOne(id int64) (t task.Task, err error) {
 }
 
 // Save Task
-func (r *taskRepository) Insert(t *task.Task) error {
-	ctx, cancel := r.getContext()
+func (r *taskRepository) Insert(ctx context.Context, t *task.Task) error {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	if res, err := r.db().NamedExecContext(ctx, insertTaskQuery, t); err != nil {
@@ -59,8 +59,8 @@ func (r *taskRepository) Insert(t *task.Task) error {
 }
 
 // Update Task
-func (r *taskRepository) Update(t *task.Task) error {
-	ctx, cancel := r.getContext()
+func (r *taskRepository) Update(ctx context.Context, t *task.Task) error {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	_, err := r.db().NamedExecContext(ctx, updateTaskQuery, t)
@@ -69,8 +69,8 @@ func (r *taskRepository) Update(t *task.Task) error {
 }
 
 // Delete Task by id
-func (r *taskRepository) Delete(id int64) error {
-	ctx, cancel := r.getContext()
+func (r *taskRepository) Delete(ctx context.Context, id int64) error {
+	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	_, err := r.db().ExecContext(ctx, deleteTaskQuery, id)
