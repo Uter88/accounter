@@ -22,6 +22,10 @@
     - **main.go**: backend app entry point;
     - **frontend**: UI app entry point;
 
+- **config**:
+    - *config.go*: config entity;
+    - *config.yaml*: YAML config file;
+
 - **internal**:
     - **app**: application engine;
     - **domain**: application domain layer:
@@ -57,3 +61,5 @@
     - **js**: UI javascript libraries;
     - **styles**: CSS styles;
     - *app.wasm* (on building adapters/ui/wasm-goapp): UI builded **WASM** file;
+
+**start.sh** - application build script; 
