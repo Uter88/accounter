@@ -6,6 +6,8 @@
     - **adapter_sql**: repository adapters (**SQL**);
     - **auth**: auth service (**JWT**);
     - **renderers**: output renderers (**HTML/PDF/CSV/DocX/XLSX/JSON**);
+    - **protocols**:
+        - *websocket.go*: Websocket service (**gorila**);
     - **rest_api**: RestAPI HTTP server:
         - *server.go*: HTTP server wrapper (**Gin**);
         - **controllers**: RestAPI endpoints;

@@ -15,7 +15,7 @@ func (e *v1Engine) getTasksList(c *gin.Context) {
 	if err := c.ShouldBind(params); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if result, err := e.TaskService.GetTaskList(c, params); err != nil {
+	} else if result, err := e.taskService.GetTaskList(c, params); err != nil {
 		e.writeErr(c, http.StatusInternalServerError, err)
 
 	} else {
@@ -30,7 +30,7 @@ func (e *v1Engine) saveTask(c *gin.Context) {
 	if err := c.ShouldBind(&form); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if err := e.TaskService.SaveTask(c, &form); err != nil {
+	} else if err := e.taskService.SaveTask(c, &form); err != nil {
 		e.writeErr(c, http.StatusInternalServerError, err)
 
 	} else {
@@ -42,7 +42,7 @@ func (e *v1Engine) deleteTask(c *gin.Context) {
 	if id, err := strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if err = e.TaskService.DeleteTask(c, id); err != nil {
+	} else if err = e.taskService.DeleteTask(c, id); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
 	} else {
@@ -57,10 +57,10 @@ func (e *v1Engine) exportTasks(c *gin.Context) {
 	if err := c.ShouldBind(params); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if result, err := e.TaskService.GetTaskList(c, params); err != nil {
+	} else if result, err := e.taskService.GetTaskList(c, params); err != nil {
 		e.writeErr(c, http.StatusInternalServerError, err)
 
-	} else if result, err := e.TaskService.ExportTasks(result, format); err != nil {
+	} else if result, err := e.taskService.ExportTasks(result, format); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
 	} else {

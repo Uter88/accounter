@@ -28,6 +28,9 @@ prod: &default
       - Content-Length
       - Content-Disposition
     max_age: 12h
+    websocket:
+      read_deadline: 1m
+      write_deadline: 3s
   db:
     driver: postgres
     dsn: user=uter password=28031988Uter host=192.168.0.107 port=5432 dbname=main

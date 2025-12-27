@@ -3,6 +3,7 @@ package app
 import (
 	"accounter/adapters/adapter_sql"
 	"accounter/adapters/auth"
+	"accounter/adapters/protocols"
 	"accounter/adapters/renderers"
 	restapi "accounter/adapters/rest_api"
 	v1 "accounter/adapters/rest_api/controllers/v1"
@@ -84,16 +85,25 @@ func (a *AppContext) initConnections(ctx context.Context) *AppContext {
 
 // Init HTTP server
 func (a *AppContext) initServer() *AppContext {
-	engine := v1.NewEngine(a.config, a.logger)
-
 	userRepo := adapter_sql.NewUserRepository(a.db)
 	taskRepo := adapter_sql.NewTaskRepository(a.db)
 
-	engine.AuthService = auth.NewAuthService(userRepo)
-	engine.UserService = user.NewUserService(userRepo)
-	engine.TaskService = task.NewTaskService(taskRepo, renderers.NewTaskRenderer())
+	authService := auth.NewAuthService(userRepo)
+	userService := user.NewUserService(userRepo)
+	taskService := task.NewTaskService(taskRepo, renderers.NewTaskRenderer())
+	websocketService := protocols.NewWebsocketService(auth.NewAuthService(userRepo), a.config, a.logger)
 
-	a.server.RegisterEngine(engine)
+	params := v1.EngineParams{
+		Config:           a.config,
+		Logger:           a.logger,
+		AuthService:      authService,
+		UserService:      userService,
+		TaskService:      taskService,
+		WebsocketService: websocketService,
+	}
+
+	v1Engine := v1.NewEngine(params)
+	a.server.RegisterEngine(v1Engine)
 
 	return a
 }

@@ -11,27 +11,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-// CurrentUser model
-type CurrentUser struct {
-	user.User
-	Tokens struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-	} `json:"tokens"`
-
-	IsAuthorized bool `json:"is_authorized"`
-}
-
-func (u *CurrentUser) SetToken(access, refresh string) {
-	u.Tokens.AccessToken = access
-	u.Tokens.RefreshToken = refresh
-	u.SetAuthorized(true)
-}
-
-func (u *CurrentUser) SetAuthorized(v bool) {
-	u.IsAuthorized = v
-}
-
 // Authorization service
 type AuthService struct {
 	repo user.UserRepository
@@ -45,7 +24,7 @@ func NewAuthService(repo user.UserRepository) AuthService {
 }
 
 // Authorize CurrentUser by login and password
-func (s AuthService) LoginByCredentials(ctx context.Context, login, password string, cfg config.Config) (result CurrentUser, err error) {
+func (s AuthService) LoginByCredentials(ctx context.Context, login, password string, cfg config.Config) (result user.CurrentUser, err error) {
 	if u, err := s.repo.GetByCredentials(ctx, login, password); err != nil {
 		return result, err
 
@@ -58,7 +37,7 @@ func (s AuthService) LoginByCredentials(ctx context.Context, login, password str
 }
 
 // Authorize CurrentUser by JWT token
-func (s AuthService) LoginByToken(ctx context.Context, token string, cfg config.Config) (result CurrentUser, err error) {
+func (s AuthService) LoginByToken(ctx context.Context, token string, cfg config.Config) (result user.CurrentUser, err error) {
 	if items := strings.Split(token, " "); len(items) == 2 {
 		token = items[1]
 	}
@@ -78,7 +57,7 @@ func (s AuthService) LoginByToken(ctx context.Context, token string, cfg config.
 }
 
 // createTokens creates new JWT token
-func createTokens(u *CurrentUser, cfg config.Config) error {
+func createTokens(u *user.CurrentUser, cfg config.Config) error {
 	payload := JWTPayload{UserID: u.ID}
 
 	token, err := payload.GenerateToken(cfg.TokenExpire, cfg.SecretKey)

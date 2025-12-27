@@ -1,10 +1,9 @@
 package store
 
 import (
-	"accounter/adapters/auth"
-	v1 "accounter/adapters/rest_api/controllers/v1"
 	"accounter/config"
 	"accounter/internal/domain/task"
+	"accounter/internal/domain/user"
 	"accounter/pkg/tools"
 	"encoding/base64"
 	"fmt"
@@ -15,10 +14,10 @@ import (
 
 type baseStore struct {
 	api  string
-	user auth.CurrentUser
+	user user.CurrentUser
 }
 
-func (b *baseStore) SetUser(ctx app.Context, user auth.CurrentUser, remember bool) {
+func (b *baseStore) SetUser(ctx app.Context, user user.CurrentUser, remember bool) {
 	b.user = user
 
 	b.storeAccessToken(ctx, user.Tokens.AccessToken)
@@ -70,7 +69,7 @@ func (b *baseStore) LoadAuthData(ctx app.Context) (login, password string, ok bo
 	return
 }
 
-func (b *baseStore) GetUser() auth.CurrentUser {
+func (b *baseStore) GetUser() user.CurrentUser {
 	return b.user
 }
 
@@ -78,8 +77,8 @@ func (b *baseStore) IsAuthorized() bool {
 	return b.user.IsAuthorized
 }
 
-func newRequest[R any](s baseStore) tools.Request[v1.Response[R]] {
-	params := tools.NewRequest[v1.Response[R]](s.api)
+func newRequest[R any](s baseStore) tools.Request[tools.Response[R]] {
+	params := tools.NewRequest[tools.Response[R]](s.api)
 
 	if s.user.IsAuthorized {
 		params = params.Headers(map[string]string{

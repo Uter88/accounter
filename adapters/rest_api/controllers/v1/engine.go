@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"accounter/adapters/auth"
 	"accounter/config"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
@@ -20,25 +19,52 @@ type v1Engine struct {
 	cfg    config.Config
 	logger logger.Logger
 
-	TaskService task.TaskService
-	UserService user.UserService
-	AuthService AuthService
+	taskService      task.TaskService
+	userService      user.UserService
+	authService      authService
+	websocketService websocketService
 }
 
-// AuthService authorization
-type AuthService interface {
-	LoginByToken(ctx context.Context, token string, cfg config.Config) (result auth.CurrentUser, err error)
-	LoginByCredentials(ctx context.Context, login, password string, cfg config.Config) (result auth.CurrentUser, err error)
+// Websocket service
+type websocketService interface {
+	AcceptConnection(w http.ResponseWriter, r *http.Request, responseHeader http.Header) error
+}
+
+// Authorization service
+type authService interface {
+	LoginByToken(ctx context.Context, token string, cfg config.Config) (result user.CurrentUser, err error)
+	LoginByCredentials(ctx context.Context, login, password string, cfg config.Config) (result user.CurrentUser, err error)
 }
 
 // Creates new v1Engine
-func NewEngine(cfg config.Config, logger logger.Logger) v1Engine {
-	return v1Engine{cfg: cfg, logger: logger}
+func NewEngine(params EngineParams) v1Engine {
+	return v1Engine{
+		cfg:              params.Config,
+		logger:           params.Logger,
+		authService:      params.AuthService,
+		taskService:      params.TaskService,
+		userService:      params.UserService,
+		websocketService: params.WebsocketService,
+	}
+}
+
+// Engine params
+type EngineParams struct {
+	Config           config.Config
+	Logger           logger.Logger
+	TaskService      task.TaskService
+	UserService      user.UserService
+	AuthService      authService
+	WebsocketService websocketService
 }
 
 // RegisterRoutes register V1 routes
 func (e v1Engine) RegisterRoutes(s *gin.Engine) {
 	v1 := s.Group("/api/v1")
+
+	v1.GET("websocket", func(ctx *gin.Context) {
+		e.websocketService.AcceptConnection(ctx.Writer, ctx.Request, nil)
+	})
 
 	v1.Group("/login").
 		GET("", e.loginByToken).
@@ -61,7 +87,7 @@ func (e v1Engine) RegisterRoutes(s *gin.Engine) {
 
 // Write success response
 func (e *v1Engine) writeOk(c *gin.Context, data any) {
-	resp := Response[any]{
+	resp := tools.Response[any]{
 		Data:    data,
 		Success: true,
 		Status:  http.StatusOK,
@@ -72,7 +98,7 @@ func (e *v1Engine) writeOk(c *gin.Context, data any) {
 
 // Write error response
 func (e *v1Engine) writeErr(c *gin.Context, code int, err error) {
-	resp := Response[any]{
+	resp := tools.Response[any]{
 		Status: code,
 		Error:  err.Error(),
 	}
@@ -109,22 +135,4 @@ func (e *v1Engine) writeBlob(c *gin.Context, format tools.FileFormat, content *b
 	c.Header("Content-Length", fmt.Sprintf("%d", content.Len()))
 
 	content.WriteTo(c.Writer)
-}
-
-// Response struct
-type Response[T any] struct {
-	// Response success status
-	Success bool `json:"success"`
-
-	// Response HTTP status code
-	Status int `json:"status"`
-
-	// Response payload
-	Data T `json:"data"`
-
-	// Response error
-	Error string `json:"error"`
-
-	// Total rows counter (for pagination)
-	TotalRows int `json:"total_rows"`
 }

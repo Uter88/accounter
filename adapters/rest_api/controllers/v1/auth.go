@@ -15,7 +15,7 @@ func (e *v1Engine) loginByCredentials(c *gin.Context) {
 	if err := c.ShouldBind(&form); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if result, err := e.AuthService.LoginByCredentials(c, form.Login, form.Password, e.cfg); err != nil {
+	} else if result, err := e.authService.LoginByCredentials(c, form.Login, form.Password, e.cfg); err != nil {
 		e.writeErr(c, http.StatusUnauthorized, err)
 
 	} else {
@@ -26,7 +26,7 @@ func (e *v1Engine) loginByCredentials(c *gin.Context) {
 func (e *v1Engine) loginByToken(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 
-	if result, err := e.AuthService.LoginByToken(c, token, e.cfg); err != nil {
+	if result, err := e.authService.LoginByToken(c, token, e.cfg); err != nil {
 		e.writeErr(c, http.StatusUnauthorized, err)
 
 	} else {
