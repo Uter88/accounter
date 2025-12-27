@@ -44,15 +44,21 @@ type Config struct {
 }
 
 type HTTPConfig struct {
-	Host             string        `yaml:"host"`
-	Port             uint          `yaml:"port"`
-	AllowOrigins     []string      `yaml:"allow_origins"`
-	AllowHeaders     []string      `yaml:"allow_headers"`
-	AllowMethods     []string      `yaml:"allow_methods"`
-	AllowWildcard    bool          `yaml:"allow_wildcard"`
-	AllowCredentials bool          `yaml:"allow_credentials"`
-	ExposeHeaders    []string      `yaml:"expose_headers"`
-	MaxAge           time.Duration `yaml:"max_age"`
+	Host             string          `yaml:"host"`
+	Port             uint            `yaml:"port"`
+	AllowOrigins     []string        `yaml:"allow_origins"`
+	AllowHeaders     []string        `yaml:"allow_headers"`
+	AllowMethods     []string        `yaml:"allow_methods"`
+	AllowWildcard    bool            `yaml:"allow_wildcard"`
+	AllowCredentials bool            `yaml:"allow_credentials"`
+	ExposeHeaders    []string        `yaml:"expose_headers"`
+	MaxAge           time.Duration   `yaml:"max_age"`
+	Websocket        WebsocketConfig `yaml:"ws_config"`
+}
+
+type WebsocketConfig struct {
+	ReadDeadline  time.Duration `yaml:"read_deadline"`
+	WriteDeadline time.Duration `yaml:"write_deadline"`
 }
 
 // InitConfig parse args and load config from YAML file

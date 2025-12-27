@@ -10,7 +10,7 @@ import (
 )
 
 func (e *v1Engine) getUsersList(c *gin.Context) {
-	if result, err := e.UserService.GetUsersList(c); err != nil {
+	if result, err := e.userService.GetUsersList(c); err != nil {
 		e.writeErr(c, http.StatusInternalServerError, err)
 
 	} else {
@@ -24,7 +24,7 @@ func (e *v1Engine) saveUser(c *gin.Context) {
 	if err := c.ShouldBind(&form); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if err := e.UserService.SaveUser(c, &form); err != nil {
+	} else if err := e.userService.SaveUser(c, &form); err != nil {
 		e.writeErr(c, http.StatusInternalServerError, err)
 
 	} else {
@@ -36,7 +36,7 @@ func (e *v1Engine) deleteUser(c *gin.Context) {
 	if id, err := strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if err = e.UserService.DeleteUser(c, id); err != nil {
+	} else if err = e.userService.DeleteUser(c, id); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
 	} else {
@@ -48,7 +48,7 @@ func (e *v1Engine) isUserExists(c *gin.Context) {
 	if login, ok := c.GetQuery("login"); !ok {
 		e.writeErr(c, http.StatusBadRequest, errors.New("required login param"))
 
-	} else if exists, err := e.UserService.CheckUniqueLogin(c, login); err != nil {
+	} else if exists, err := e.userService.CheckUniqueLogin(c, login); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
 	} else {

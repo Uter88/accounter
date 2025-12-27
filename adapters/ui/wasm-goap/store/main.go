@@ -1,8 +1,8 @@
 package store
 
 import (
-	"accounter/adapters/auth"
 	"accounter/adapters/ui/wasm-goap/models"
+	"accounter/internal/domain/user"
 	"accounter/pkg/tools"
 	"fmt"
 
@@ -37,7 +37,7 @@ func (s *mainStore) LoginByCredentials(ctx app.Context, form models.LoginForm) e
 		"password": form.Password,
 	}
 
-	resp, errResp, err := newRequest[auth.CurrentUser](*s.baseStore).
+	resp, errResp, err := newRequest[user.CurrentUser](*s.baseStore).
 		Path("login").
 		Method("POST").
 		Data(data.ToJSON()).
@@ -53,7 +53,7 @@ func (s *mainStore) LoginByCredentials(ctx app.Context, form models.LoginForm) e
 }
 
 func (s *mainStore) LoginByToken(ctx app.Context, token string) error {
-	resp, errResp, err := newRequest[auth.CurrentUser](*s.baseStore).
+	resp, errResp, err := newRequest[user.CurrentUser](*s.baseStore).
 		Path("login").
 		Header("Authorization", fmt.Sprintf("Bearer %s", token)).
 		Do()
@@ -69,6 +69,6 @@ func (s *mainStore) LoginByToken(ctx app.Context, token string) error {
 
 func (s *mainStore) Logout(ctx app.Context) {
 	ctx.SessionStorage().Clear()
-	s.user = auth.CurrentUser{}
+	s.user = user.CurrentUser{}
 	ctx.Navigate("/login")
 }

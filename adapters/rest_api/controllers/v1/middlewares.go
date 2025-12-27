@@ -18,7 +18,7 @@ func (v1 *v1Engine) userAuthentication() gin.HandlerFunc {
 			token = c.Query("token")
 		}
 
-		if user, err := v1.AuthService.LoginByToken(c, token, v1.cfg); err != nil {
+		if user, err := v1.authService.LoginByToken(c, token, v1.cfg); err != nil {
 			v1.writeErr(c, http.StatusUnauthorized, err)
 
 		} else {
