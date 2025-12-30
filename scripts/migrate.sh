@@ -1,0 +1,1 @@
+go run tools/migrator/migrator.go

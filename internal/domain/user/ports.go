@@ -22,4 +22,7 @@ type UserRepository interface {
 
 	// Get one User by login
 	GetByCredentials(ctx context.Context, login, password string) (User, error)
+
+	// Execute operations in transaction
+	WithTx(ctx context.Context, cb func(context.Context) error) error
 }

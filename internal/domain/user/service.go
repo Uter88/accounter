@@ -22,6 +22,10 @@ func (s UserService) GetUsersList(ctx context.Context) ([]User, error) {
 	return result, err
 }
 
+func (s UserService) GetUser(ctx context.Context, id int64) (User, error) {
+	return s.repo.GetOne(ctx, id)
+}
+
 // SaveUser create/update User
 func (s UserService) SaveUser(ctx context.Context, user *User) error {
 	if tools.IsEmpty(user.ID) {
@@ -29,6 +33,18 @@ func (s UserService) SaveUser(ctx context.Context, user *User) error {
 	}
 
 	return s.repo.Update(ctx, user)
+}
+
+func (s UserService) SaveUsers(ctx context.Context, users []User) error {
+	return s.repo.WithTx(ctx, func(ctx context.Context) error {
+		for i := range users {
+			if err := s.SaveUser(ctx, &users[i]); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 // DeleteUser delete User by id

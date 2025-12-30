@@ -28,6 +28,8 @@ prod: &default
       - Content-Length
       - Content-Disposition
     max_age: 12h
+    read_timeout: 20m
+    write_timeout: 20m
     websocket:
       read_deadline: 1m
       write_deadline: 3s
