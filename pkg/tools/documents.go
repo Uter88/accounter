@@ -11,6 +11,7 @@ const (
 	FileFormatPDF  FileFormat = "pdf"
 	FileFormatJSON FileFormat = "json"
 	FileFormatHTML FileFormat = "html"
+	FileFormatXML  FileFormat = "xml"
 )
 
 func (f FileFormat) Parse(v string) FileFormat {
@@ -31,6 +32,9 @@ func (f FileFormat) Parse(v string) FileFormat {
 
 	case FileFormatPDF:
 		return FileFormatPDF
+
+	case FileFormatXML:
+		return FileFormatXML
 
 	case "mhtml", FileFormatHTML:
 		return FileFormatHTML

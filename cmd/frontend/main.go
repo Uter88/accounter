@@ -1,8 +1,8 @@
 package main
 
 import (
-	wasmgoap "accounter/adapters/ui/wasm-goap"
 	"accounter/config"
+	wasmgoap "accounter/internal/infrastructure/ui/wasm-goap"
 	"accounter/pkg/logger"
 )
 

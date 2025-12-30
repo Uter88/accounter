@@ -43,6 +43,7 @@ type Config struct {
 	} `yaml:"db"`
 }
 
+// HTTP server config
 type HTTPConfig struct {
 	Host             string          `yaml:"host"`
 	Port             uint            `yaml:"port"`
@@ -53,9 +54,12 @@ type HTTPConfig struct {
 	AllowCredentials bool            `yaml:"allow_credentials"`
 	ExposeHeaders    []string        `yaml:"expose_headers"`
 	MaxAge           time.Duration   `yaml:"max_age"`
+	ReadTimeout      time.Duration   `yaml:"read_timeout"`
+	WriteTimeout     time.Duration   `yaml:"write_timeout"`
 	Websocket        WebsocketConfig `yaml:"ws_config"`
 }
 
+// Websocket config
 type WebsocketConfig struct {
 	ReadDeadline  time.Duration `yaml:"read_deadline"`
 	WriteDeadline time.Duration `yaml:"write_deadline"`

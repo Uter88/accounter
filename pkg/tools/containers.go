@@ -13,6 +13,16 @@ func (d Data) ToJSON() *bytes.Buffer {
 	return ToJSON(d)
 }
 
+func MapKeys[K comparable, V any](m map[K]V) []K {
+	result := make([]K, 0, len(m))
+
+	for k := range m {
+		result = append(result, k)
+	}
+
+	return result
+}
+
 type OrderedMap[K cmp.Ordered, V any] struct {
 	items map[K]V
 	keys  []K

@@ -1,22 +1,22 @@
 package app
 
 import (
-	"accounter/adapters/adapter_sql"
-	"accounter/adapters/auth"
-	"accounter/adapters/protocols"
-	"accounter/adapters/renderers"
-	restapi "accounter/adapters/rest_api"
-	v1 "accounter/adapters/rest_api/controllers/v1"
 	"accounter/config"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
+	"accounter/internal/infrastructure/adapter_sql"
+	"accounter/internal/infrastructure/auth"
+	"accounter/internal/infrastructure/protocols"
+	"accounter/internal/infrastructure/renderers"
+	restapi "accounter/internal/infrastructure/rest_api"
+	v1 "accounter/internal/infrastructure/rest_api/controllers/v1"
 	"accounter/pkg/logger"
 	"context"
 )
 
 // Application context
 type AppContext struct {
-	server *restapi.Server
+	server restapi.Server
 
 	config config.Config
 
@@ -71,7 +71,7 @@ func (a *AppContext) launchTask(ctx context.Context, name string, task bgTask) {
 
 // Init application, connections, etc.
 func (a *AppContext) Init(ctx context.Context) *AppContext {
-	return a.initConnections(ctx).initServer()
+	return a.initConnections(ctx).initServer(ctx)
 }
 
 // Init connections with databases
@@ -84,7 +84,7 @@ func (a *AppContext) initConnections(ctx context.Context) *AppContext {
 }
 
 // Init HTTP server
-func (a *AppContext) initServer() *AppContext {
+func (a *AppContext) initServer(ctx context.Context) *AppContext {
 	userRepo := adapter_sql.NewUserRepository(a.db)
 	taskRepo := adapter_sql.NewTaskRepository(a.db)
 
@@ -103,7 +103,8 @@ func (a *AppContext) initServer() *AppContext {
 	}
 
 	v1Engine := v1.NewEngine(params)
-	a.server.RegisterEngine(v1Engine)
+	ginServer := restapi.NewGinServer(a.config, v1Engine)
+	a.server = restapi.NewHTTPServer(ctx, a.config, a.logger, ginServer)
 
 	return a
 }
@@ -125,7 +126,6 @@ func NewAppContext(ctx context.Context, cfg config.Config, logger logger.Logger)
 		config: cfg,
 		logger: logger,
 		db:     adapter_sql.NewSQLClient(cfg.DB.Driver, cfg.DB.DSN),
-		server: restapi.NewServer(ctx, cfg, logger),
 		tasks:  make(map[string]bgTask),
 	}
 }

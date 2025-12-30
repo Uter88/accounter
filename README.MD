@@ -2,34 +2,33 @@
 
 #### Project structure:
 
-- **adapters**:
-    - **adapter_sql**: repository adapters (**SQL**);
-    - **auth**: auth service (**JWT**);
-    - **renderers**: output renderers (**HTML/PDF/CSV/DocX/XLSX/JSON**);
-    - **protocols**:
-        - *websocket.go*: Websocket service (**gorila**);
-    - **rest_api**: RestAPI HTTP server:
-        - *server.go*: HTTP server wrapper (**Gin**);
-        - **controllers**: RestAPI endpoints;
-            - **v1**: HTTP engine version 1;
-                - *auth.go*: authorization;
-                - *engine.go*: V1 HTTP engine;
-                - *middlewares.go*: request middlewares;
-                - *task.go*: task endpoints;
-                - *user.go*: user endpoints;
-    - **ui**: fronted UI:
-        - **wasm-goapp**: WASM UI based on [**go-app**]( https://go-app.dev/);
-
 - **cmd**:
     - **main.go**: backend app entry point;
-    - **frontend**: UI app entry point;
+    - **frontend**: **UI** app entry point;
 
 - **config**:
-    - *config.go*: config entity;
-    - *config.yaml*: YAML config file;
+    - *config.go*: application config entity;
+    - *config.yaml*: **YAML** config file;
 
-- **internal**:
+- **internal**: internal packages;
     - **app**: application engine;
+    - **infrastucture**: application infrastructure layer;
+        - **adapter_sql**: repository adapters (**SQL**);
+        - **auth**: auth service (**JWT**);
+        - **renderers**: output renderers (**HTML/PDF/CSV/DocX/XLSX/JSON**);
+        - **protocols**:
+            - *websocket.go*: Websocket service (**gorila**);
+        - **rest_api**: RestAPI HTTP server:
+            - *server.go*: HTTP server wrapper (**Gin**);
+            - **endpoints**: RestAPI endpoints;
+                - **v1**: HTTP engine version 1;
+                    - *auth.go*: authorization;
+                    - *engine.go*: V1 HTTP engine;
+                    - *middlewares.go*: request middlewares;
+                    - *task.go*: task endpoints;
+                    - *user.go*: user endpoints;
+        - **ui**: fronted UI:
+            - **wasm-goapp**: WASM UI based on [**go-app**]( https://go-app.dev/);
     - **domain**: application domain layer:
         - **task**:
             - *params.go*: task query params;
@@ -41,7 +40,7 @@
             - *service.go*: user use cases;
             - *user.go*: user entity;
 
-- **pkg**:
+- **pkg**: common usage packages
     - **logger**: tool for logging;
     - **tools**:
         - *containers.go*: data containers;
@@ -52,10 +51,9 @@
         - *requests.go*: utils for HTTP requests;
         - *validators.go*: input data validators;
 
-- **scripts**:
-    - *migrator.go*: scripts and tools for migrate of database;
-
-- **templates**: templates for render documents;
+- **tools**: application tools;
+    - **migrator**:
+        - *migrator.go*: migrations for databases;
 
 - **web**:
     - **fonts**: UI fonts;
@@ -64,4 +62,8 @@
     - **styles**: CSS styles;
     - *app.wasm* (on building adapters/ui/wasm-goapp): UI builded **WASM** file;
 
-**start.sh** - application build script; 
+- **templates**: static templates;
+
+- **scripts**:
+    - *migrate.sh*: launch migrator;
+    - *start.sh*: application build script; 
