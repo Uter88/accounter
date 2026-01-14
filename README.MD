@@ -6,56 +6,41 @@
     - **main.go**: backend app entry point;
     - **frontend**: **UI** app entry point;
 
-- **config**:
-    - *config.go*: application config entity;
-    - *config.yaml*: **YAML** config file;
+- **config**: application configuration;
 
 - **internal**: internal packages;
     - **app**: application engine;
-    - **infrastucture**: application infrastructure layer;
+    - **infrastucture**: infrastructure layer;
         - **adapter_sql**: repository adapters (**SQL**);
-        - **auth**: auth service (**JWT**);
+        - **auth**: authorization service (**JWT**);
         - **renderers**: output renderers (**HTML/PDF/CSV/DocX/XLSX/JSON**);
+        - **comporators**: tools for determining the difference between objects;
+        - **queues**: MQ brokers;
+            - *kafka.go*: Kafka MQ;
         - **protocols**:
             - *websocket.go*: Websocket service (**gorila**);
-        - **rest_api**: RestAPI HTTP server:
+        - **rest**: REST API HTTP server:
             - *server.go*: HTTP server wrapper (**Gin**);
             - **endpoints**: RestAPI endpoints;
                 - **v1**: HTTP engine version 1;
-                    - *auth.go*: authorization;
-                    - *engine.go*: V1 HTTP engine;
-                    - *middlewares.go*: request middlewares;
-                    - *task.go*: task endpoints;
-                    - *user.go*: user endpoints;
         - **ui**: fronted UI:
             - **wasm-goapp**: WASM UI based on [**go-app**]( https://go-app.dev/);
+
     - **domain**: application domain layer:
-        - **task**:
-            - *params.go*: task query params;
-            - *ports.go*: task ports;
-            - *service.go*: task use cases;
-            - *task.go*: task entity;
-        - **user**:
-            - *ports.go*: user ports;
-            - *service.go*: user use cases;
-            - *user.go*: user entity;
+        - **shared**: common use domain;
+        - **task**: task domain;
+        - **user**: user domain;
+        - **event**: event domain;
 
-- **pkg**: common usage packages
+- **pkg**: common usage packages;
     - **logger**: tool for logging;
-    - **tools**:
-        - *containers.go*: data containers;
-        - *dateutils.go*: utils for working with date/time;
-        - *documents.go*:  utils for working with documents;
-        - *formatters.go*: utils for formatting values;
-        - *helpers.go*: utils for working with types;
-        - *requests.go*: utils for HTTP requests;
-        - *validators.go*: input data validators;
+    - **tools**: publicly available tools;
 
-- **tools**: application tools;
+- **tools**: application maintenance tools;
     - **migrator**:
         - *migrator.go*: migrations for databases;
 
-- **web**:
+- **web**: statics web components; 
     - **fonts**: UI fonts;
     - **icons**: UI icons;
     - **js**: UI javascript libraries;
@@ -63,7 +48,8 @@
     - *app.wasm* (on building adapters/ui/wasm-goapp): UI builded **WASM** file;
 
 - **templates**: static templates;
-
-- **scripts**:
+- **migrations**: database migration scripts;
+- **scripts**: scripts to perform various build and migration analysis operations;
     - *migrate.sh*: launch migrator;
-    - *start.sh*: application build script; 
+    - *start.sh*: application build script;
+- **deployments**: deplotments tools (Dockerfile, Docker compose) 

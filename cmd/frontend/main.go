@@ -14,7 +14,7 @@ func main() {
 	cfg := config.InitConfig()
 
 	// Create logger
-	logger := logger.NewLogger(cfg.DebugMode, cfg.AppMode, "logs")
+	logger := logger.NewLogger(cfg.DebugMode)
 
 	// Create frontend application instance
 	frontApp := wasmgoap.NewApp(cfg, logger)

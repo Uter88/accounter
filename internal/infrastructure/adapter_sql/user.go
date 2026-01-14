@@ -9,22 +9,22 @@ import (
 
 // User repository
 type userRepository struct {
-	baseRepository
+	*baseRepository
 }
 
-// Creates new userRepository
-func NewUserRepository(client SQLClient) *userRepository {
+// NewUserRepository creates new userRepository
+func NewUserRepository(client *SQLClient) *userRepository {
 	return &userRepository{
 		baseRepository: newBaseRepository(client),
 	}
 }
 
-// Get list of User
-func (r userRepository) GetList(ctx context.Context) ([]user.User, error) {
+// GetList get list of User
+func (r *userRepository) GetList(ctx context.Context) (user.Users, error) {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
-	result := make([]user.User, 0)
+	result := make(user.Users, 0)
 	query := fmt.Sprintf("%s ORDER BY login", getUserQuery)
 
 	db := r.client.GetExecutor(ctx)
@@ -33,8 +33,8 @@ func (r userRepository) GetList(ctx context.Context) ([]user.User, error) {
 	return result, err
 }
 
-// Get one User by id
-func (r userRepository) GetOne(ctx context.Context, id int64) (u user.User, err error) {
+// GetOne get one User by id
+func (r *userRepository) GetOne(ctx context.Context, id int64) (u user.User, err error) {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
@@ -46,8 +46,8 @@ func (r userRepository) GetOne(ctx context.Context, id int64) (u user.User, err 
 	return
 }
 
-// Get one User by login
-func (r userRepository) GetByCredentials(ctx context.Context, login, password string) (u user.User, err error) {
+// GetByCredentials get one User by login and/or password
+func (r *userRepository) GetByCredentials(ctx context.Context, login, password string) (u user.User, err error) {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
@@ -64,8 +64,8 @@ func (r userRepository) GetByCredentials(ctx context.Context, login, password st
 	return
 }
 
-// Save User
-func (r userRepository) Insert(ctx context.Context, user *user.User) error {
+// Create creates new User
+func (r *userRepository) Create(ctx context.Context, user *user.User) error {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
@@ -81,8 +81,8 @@ func (r userRepository) Insert(ctx context.Context, user *user.User) error {
 	return nil
 }
 
-// Update one User
-func (r userRepository) Update(ctx context.Context, user *user.User) error {
+// Update updates one User
+func (r *userRepository) Update(ctx context.Context, user *user.User) error {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
@@ -93,13 +93,12 @@ func (r userRepository) Update(ctx context.Context, user *user.User) error {
 	return err
 }
 
-// Delete one User by id
-func (r userRepository) Delete(ctx context.Context, id int64) error {
+// Delete deletes one User by id
+func (r *userRepository) Delete(ctx context.Context, id int64) error {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	db := r.client.GetExecutor(ctx)
-
 	_, err := db.ExecContext(ctx, deleteUserQuery, id)
 
 	return err
@@ -114,6 +113,7 @@ const (
 	insertUserQuery = `
 		INSERT INTO users (login, password, name, surname, patronymic, price_per_hour)
 		VALUES (:id, :login, :password, :name, :surname, :patronymic, :price_per_hour)
+		RETURNING id;
 	`
 	updateUserQuery = `
 		UPDATE users SET

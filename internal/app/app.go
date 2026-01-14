@@ -2,29 +2,38 @@ package app
 
 import (
 	"accounter/config"
+	"accounter/internal/domain/event"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
 	"accounter/internal/infrastructure/adapter_sql"
 	"accounter/internal/infrastructure/auth"
+	comparator "accounter/internal/infrastructure/comparators"
 	"accounter/internal/infrastructure/protocols"
+	"accounter/internal/infrastructure/queues"
 	"accounter/internal/infrastructure/renderers"
-	restapi "accounter/internal/infrastructure/rest_api"
-	v1 "accounter/internal/infrastructure/rest_api/controllers/v1"
+	"accounter/internal/infrastructure/rest"
+	v1 "accounter/internal/infrastructure/rest/endpoints/v1"
+
 	"accounter/pkg/logger"
 	"context"
 )
 
 // Application context
 type AppContext struct {
-	server restapi.Server
-
+	// Application config
 	config config.Config
+
+	// HTTP server
+	server *rest.Server
 
 	// Default logger
 	logger logger.Logger
 
 	// Database client
-	db adapter_sql.SQLClient
+	db *adapter_sql.SQLClient
+
+	// Message queue broker
+	mq *queues.KafkaBroker
 
 	// Background tasks map
 	tasks map[string]bgTask
@@ -33,20 +42,22 @@ type AppContext struct {
 // Background task
 type bgTask interface {
 	Run(ctx context.Context) error
+	Name() string
 }
 
 // RegisterTask add background task to local store
-func (a *AppContext) RegisterTask(name string, task bgTask) *AppContext {
-	a.tasks[name] = task
+func (a *AppContext) RegisterTask(task bgTask) *AppContext {
+	a.tasks[task.Name()] = task
 
 	return a
 }
 
 // Run application
 func (a *AppContext) Run(ctx context.Context) {
-	a.launchTasks(ctx)
+	a.RegisterTask(a.mq)
+	a.RegisterTask(a.server)
 
-	go a.server.ListenAndServe()
+	a.launchTasks(ctx)
 
 	<-ctx.Done()
 }
@@ -71,7 +82,7 @@ func (a *AppContext) launchTask(ctx context.Context, name string, task bgTask) {
 
 // Init application, connections, etc.
 func (a *AppContext) Init(ctx context.Context) *AppContext {
-	return a.initConnections(ctx).initServer(ctx)
+	return a.initConnections(ctx).initServices(ctx)
 }
 
 // Init connections with databases
@@ -83,28 +94,63 @@ func (a *AppContext) initConnections(ctx context.Context) *AppContext {
 	return a
 }
 
-// Init HTTP server
-func (a *AppContext) initServer(ctx context.Context) *AppContext {
+// Init application services
+func (a *AppContext) initServices(ctx context.Context) *AppContext {
+
+	// Init repositories
 	userRepo := adapter_sql.NewUserRepository(a.db)
 	taskRepo := adapter_sql.NewTaskRepository(a.db)
+	eventRepo := adapter_sql.NewEventRepository(a.db)
 
+	// Init main services
+
+	// Init Event service
+	eventService := event.NewEventService(
+		eventRepo,
+		comparator.NewComparator().Fields(task.ComparationFields[:]...),
+	)
+
+	// Init authorization service
 	authService := auth.NewAuthService(userRepo)
-	userService := user.NewUserService(userRepo)
-	taskService := task.NewTaskService(taskRepo, renderers.NewTaskRenderer())
-	websocketService := protocols.NewWebsocketService(auth.NewAuthService(userRepo), a.config, a.logger)
 
+	// Init User service
+	userService := user.NewUserService(userRepo)
+
+	// Init Task service
+	taskService := task.NewTaskService(
+		taskRepo,
+		renderers.NewTaskRenderer(),
+		eventService,
+	)
+
+	// Init websocket service
+	websocketService := protocols.NewWebsocketService(
+		authService,
+		a.config,
+		a.logger.WithPerfix("WS"),
+	)
+
+	// Register Event publishers
+	eventService.RegisterPublisher(a.mq)
+
+	// Register Event subscribers
+	a.mq.RegisterSubscribers(websocketService)
+
+	// Init HTTP server engine
 	params := v1.EngineParams{
 		Config:           a.config,
-		Logger:           a.logger,
+		Logger:           a.logger.WithPerfix("HTTP"),
 		AuthService:      authService,
 		UserService:      userService,
 		TaskService:      taskService,
+		EventService:     eventService,
 		WebsocketService: websocketService,
 	}
-
 	v1Engine := v1.NewEngine(params)
-	ginServer := restapi.NewGinServer(a.config, v1Engine)
-	a.server = restapi.NewHTTPServer(ctx, a.config, a.logger, ginServer)
+
+	// Init HTTP server
+	ginServer := rest.NewGinServer(a.config, v1Engine)
+	a.server = rest.NewHTTPServer(ctx, a.config, params.Logger, ginServer)
 
 	return a
 }
@@ -117,6 +163,12 @@ func (a *AppContext) Shutdown() {
 		a.logger.Info("Success disconnected from db")
 	}
 
+	if err := a.mq.Close(); err != nil {
+		a.logger.Errorf("Error close mq reader: %s", err.Error())
+	} else {
+		a.logger.Info("Sucess close mq reader")
+	}
+
 	a.logger.Info("Shutdown system")
 }
 
@@ -124,8 +176,9 @@ func (a *AppContext) Shutdown() {
 func NewAppContext(ctx context.Context, cfg config.Config, logger logger.Logger) *AppContext {
 	return &AppContext{
 		config: cfg,
-		logger: logger,
-		db:     adapter_sql.NewSQLClient(cfg.DB.Driver, cfg.DB.DSN),
+		logger: logger.WithPerfix("APP"),
+		db:     adapter_sql.NewSQLClient(cfg.DB),
+		mq:     queues.NewBroker(ctx, cfg, logger.WithPerfix("KAFKA")),
 		tasks:  make(map[string]bgTask),
 	}
 }

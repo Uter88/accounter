@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"accounter/pkg/tools"
 	"fmt"
 	"net/http"
 	"strings"
@@ -10,18 +11,18 @@ import (
 )
 
 // Try to authorize CurrentUser and put it to context
-func (v1 v1Engine) userAuthentication() gin.HandlerFunc {
+func (v1 *v1Engine) userAuthentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.GetHeader("Authorization")
-
-		if token == "" {
-			token = c.Query("token")
-		}
+		token := tools.FirstNonEmptyValue(
+			c.GetHeader("Authorization"),
+			c.Query("token"),
+		)
 
 		if user, err := v1.authService.LoginByToken(c, token, v1.cfg); err != nil {
 			v1.writeErr(c, http.StatusUnauthorized, err)
 
 		} else {
+			user.Context = c
 			c.Set("user", user)
 		}
 
@@ -29,8 +30,8 @@ func (v1 v1Engine) userAuthentication() gin.HandlerFunc {
 	}
 }
 
-// Log request
-func (v1 v1Engine) logging() gin.HandlerFunc {
+// logging request information
+func (v1 *v1Engine) logging() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()
 		c.Set("requestStartTime", t)

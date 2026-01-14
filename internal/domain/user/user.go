@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// Users
 type Users []User
 
 // User model
@@ -18,12 +19,13 @@ type User struct {
 	PricePerHour float32 `db:"price_per_hour" json:"price_per_hour"`
 }
 
-func (u *User) GetLabel() string {
+// GetLabel return short string User representation
+func (u User) GetLabel() string {
 	return fmt.Sprintf("%s %.1s. %.1s.", u.Surname, u.Name, u.Patronymic)
 }
 
 // IsValid check for User data is valid
-func (u *User) IsValid(isAuth bool) bool {
+func (u User) IsValid(isAuth bool) bool {
 	if err := tools.ValidEmail(u.Login); err != nil {
 		return false
 	}
@@ -43,4 +45,14 @@ func (u *User) IsValid(isAuth bool) bool {
 	}
 
 	return true
+}
+
+// GetID get id
+func (u User) GetID() int64 {
+	return u.ID
+}
+
+// GetID get type of User entity
+func (u User) GetType() string {
+	return "user"
 }

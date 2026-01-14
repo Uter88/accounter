@@ -1,6 +1,7 @@
 package user
 
 import (
+	"accounter/internal/domain/shared"
 	"accounter/pkg/tools"
 	"context"
 )
@@ -11,53 +12,41 @@ type UserService struct {
 }
 
 // NewUserService creates new UserService
-func NewUserService(repo UserRepository) UserService {
-	return UserService{repo: repo}
+func NewUserService(repo UserRepository) *UserService {
+	return &UserService{repo: repo}
 }
 
 // GetUsersList get list of User
-func (s UserService) GetUsersList(ctx context.Context) ([]User, error) {
-	result, err := s.repo.GetList(ctx)
-
-	return result, err
+func (s *UserService) GetUsersList(ctx context.Context) ([]User, error) {
+	return s.repo.GetList(ctx)
 }
 
-func (s UserService) GetUser(ctx context.Context, id int64) (User, error) {
+// GetUser get single User by specified id
+func (s *UserService) GetUser(ctx context.Context, id int64) (User, error) {
 	return s.repo.GetOne(ctx, id)
 }
 
 // SaveUser create/update User
-func (s UserService) SaveUser(ctx context.Context, user *User) error {
+func (s *UserService) SaveUser(ctx shared.Context, user *User) error {
 	if tools.IsEmpty(user.ID) {
-		return s.repo.Insert(ctx, user)
+		return s.repo.Create(ctx, user)
 	}
 
 	return s.repo.Update(ctx, user)
 }
 
-func (s UserService) SaveUsers(ctx context.Context, users []User) error {
-	return s.repo.WithTx(ctx, func(ctx context.Context) error {
-		for i := range users {
-			if err := s.SaveUser(ctx, &users[i]); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-}
-
-// DeleteUser delete User by id
-func (s UserService) DeleteUser(ctx context.Context, id int64) error {
-	return s.repo.Delete(ctx, id)
+// DeleteUser delete User
+func (s *UserService) DeleteUser(ctx shared.Context, user *User) error {
+	return s.repo.Delete(ctx, user.ID)
 }
 
 // CheckUniqueLogin check for User existance by login
-func (s UserService) CheckUniqueLogin(ctx context.Context, login string) (exists bool, err error) {
+func (s *UserService) CheckUniqueLogin(ctx context.Context, login string) (exists bool, err error) {
 	_, err = s.repo.GetByCredentials(ctx, login, "")
 
 	if tools.IsNotFoundError(err) {
 		return false, nil
+
 	} else if err == nil {
 		exists = true
 	}

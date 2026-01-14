@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// TaskParams Task request params
 type TaskParams struct {
 	DateStart int64   `db:"date_start" json:"date_start" form:"date_start"`
 	DateEnd   int64   `db:"date_end" json:"date_end" form:"date_end"`
@@ -18,10 +19,11 @@ type TaskParams struct {
 	Limit     int    `db:"limit" json:"limit" form:"limit"`
 }
 
-func NewTaskParams() *TaskParams {
+// NewTaskParams creates new TaskParams
+func NewTaskParams() TaskParams {
 	n := time.Now()
 
-	return &TaskParams{
+	return TaskParams{
 		Timezone:  time.Local.String(),
 		DateStart: time.Date(n.Year(), n.Month(), n.Day(), 0, 0, 0, 0, n.Location()).Unix(),
 		DateEnd:   time.Date(n.Year(), n.Month(), n.Day(), 23, 59, 59, 0, n.Location()).Unix(),
@@ -29,6 +31,7 @@ func NewTaskParams() *TaskParams {
 	}
 }
 
+// Encode encode params to tools.Params
 func (tp TaskParams) Encode() tools.Params {
 	params := tools.NewParams()
 

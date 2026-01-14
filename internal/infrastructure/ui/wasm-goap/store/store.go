@@ -2,8 +2,10 @@ package store
 
 import (
 	"accounter/config"
+	"accounter/internal/domain/shared"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
+	"accounter/internal/infrastructure/ui/wasm-goap/models"
 	"accounter/pkg/tools"
 	"encoding/base64"
 	"fmt"
@@ -15,6 +17,7 @@ import (
 type baseStore struct {
 	api  string
 	user user.CurrentUser
+	ws   *models.WebsocketClient
 }
 
 func (b *baseStore) SetUser(ctx app.Context, user user.CurrentUser, remember bool) {
@@ -77,8 +80,8 @@ func (b *baseStore) IsAuthorized() bool {
 	return b.user.IsAuthorized
 }
 
-func newRequest[R any](s baseStore) tools.Request[tools.Response[R]] {
-	params := tools.NewRequest[tools.Response[R]](s.api)
+func newRequest[R any](s baseStore) tools.Request[shared.Response[R]] {
+	params := tools.NewRequest[shared.Response[R]](s.api)
 
 	if s.user.IsAuthorized {
 		params = params.Headers(map[string]string{
@@ -89,6 +92,7 @@ func newRequest[R any](s baseStore) tools.Request[tools.Response[R]] {
 	return params
 }
 
+// Store storage for entities
 type Store struct {
 	*baseStore
 	mainStore
@@ -96,10 +100,14 @@ type Store struct {
 	usersStore
 }
 
-func NewStore(cfg config.Config) *Store {
+// NewStore creates new Store
+func NewStore(cfg config.Config, ws *models.WebsocketClient) *Store {
 	base := &baseStore{
 		api: fmt.Sprintf("http://localhost:%d/api/v1", cfg.HTTP.Port),
+		ws:  ws,
 	}
+
+	params := task.NewTaskParams()
 
 	s := &Store{
 		baseStore:  base,
@@ -107,7 +115,7 @@ func NewStore(cfg config.Config) *Store {
 		usersStore: usersStore{baseStore: base},
 		tasksStore: tasksStore{
 			baseStore: base,
-			params:    task.NewTaskParams(),
+			params:    &params,
 		},
 	}
 

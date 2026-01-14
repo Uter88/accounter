@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -92,6 +93,16 @@ func Stringify[T any](items ...T) string {
 	return strings.Join(elems, ",")
 }
 
+func StringifyWith[T any](sep string, items ...T) string {
+	elems := make([]string, len(items))
+
+	for i := range items {
+		elems[i] = fmt.Sprintf("%v", items[i])
+	}
+
+	return strings.Join(elems, sep)
+}
+
 func PtrToValue(v any) any {
 	switch tp := v.(type) {
 	case *string:
@@ -128,6 +139,11 @@ func ToJSON(data any) *bytes.Buffer {
 	json.NewEncoder(buf).Encode(data)
 
 	return buf
+}
+
+func FromJSON[T any](data []byte) (result T) {
+	json.Unmarshal(data, &result)
+	return
 }
 
 func IsNotFoundError(err error) bool {
@@ -172,6 +188,30 @@ func StringToValue[T comparable](value string) (res T) {
 			val.SetUint(v)
 		}
 	}
+
+	return
+}
+
+func FirstNonEmptyValue[T any](values ...T) (value T) {
+	for _, val := range values {
+		if !IsEmpty(val) {
+			return val
+		}
+	}
+
+	return
+}
+
+// GetEnv get value from environment and try to return as T type
+func GetEnv[T comparable](key string) (value T, ok bool) {
+	strValue := os.Getenv(key)
+
+	if IsEmpty(strValue) {
+		return
+	}
+
+	value = StringToValue[T](strValue)
+	ok = !IsEmpty(value)
 
 	return
 }

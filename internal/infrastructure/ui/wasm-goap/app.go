@@ -3,6 +3,7 @@ package wasmgoap
 import (
 	"accounter/config"
 	"accounter/internal/infrastructure/ui/wasm-goap/common"
+	"accounter/internal/infrastructure/ui/wasm-goap/models"
 	"accounter/internal/infrastructure/ui/wasm-goap/pages"
 	"accounter/internal/infrastructure/ui/wasm-goap/store"
 	"accounter/pkg/logger"
@@ -11,7 +12,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"time"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -21,13 +21,21 @@ type App struct {
 }
 
 func NewApp(config config.Config, logger logger.Logger) App {
+	wsClient := models.NewWebsocket(config, logger)
+	store := store.NewStore(config, &wsClient)
+
 	return App{
 		ctx: common.AppContext{
-			Config: config,
-			Logger: logger,
-			Store:  store.NewStore(config),
+			Config:    config,
+			Logger:    logger,
+			Store:     store,
+			Websocket: &wsClient,
 		},
 	}
+}
+
+func (a *App) Name() string {
+	return fmt.Sprintf("HTTP client on 0.0.0.0:%d", a.ctx.Config.Client.Port)
 }
 
 func (a *App) Run(ctx context.Context) error {
@@ -38,39 +46,40 @@ func (a *App) Run(ctx context.Context) error {
 
 	app.RunWhenOnBrowser()
 
-	serv := &http.Server{
+	handler := app.Handler{
+		Name: "Accounter",
+		Icon: app.Icon{
+			Default: "/web/icons/favorite.png",
+			SVG:     "/web/icons/logo-bg.svg",
+		},
+		Title:       "AccApp",
+		Description: "Accounter application",
+		Styles: []string{
+			"/web/styles/bootstrap.min.css",
+			//"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200",
+			"/web/styles/base.css",
+			"/web/styles/popups.css",
+			"/web/styles/components.css",
+		},
+		//Fonts: []string{"/web/fonts/material.woff2"},
+
+		Scripts: []string{
+			"/web/js/main.js",
+			"/web/js/echarts/echarts.min.js",
+			"/web/js/bootstrap.bundle.min.js",
+		},
+		Resources: app.LocalDir(".."),
+	}
+
+	serv := http.Server{
 		Addr:         fmt.Sprintf("0.0.0.0:%d", a.ctx.Config.Client.Port),
-		ReadTimeout:  time.Minute * 20,
-		WriteTimeout: time.Minute * 20,
+		ReadTimeout:  a.ctx.Config.HTTP.ReadTimeout,
+		WriteTimeout: a.ctx.Config.HTTP.WriteTimeout,
 		BaseContext: func(l net.Listener) context.Context {
 			return ctx
 		},
-		Handler: &app.Handler{
-			Name: "Accounter",
-			Icon: app.Icon{
-				Default: "/web/icons/favorite.png",
-				SVG:     "/web/icons/logo-bg.svg",
-			},
-			Title:       "AccApp",
-			Description: "Accounter application",
-			Styles: []string{
-				"/web/styles/bootstrap.min.css",
-				//"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200",
-				"/web/styles/base.css",
-				"/web/styles/popups.css",
-				"/web/styles/components.css",
-			},
-			//Fonts: []string{"/web/fonts/material.woff2"},
-
-			Scripts: []string{
-				"/web/js/main.js",
-				"/web/js/echarts/echarts.min.js",
-				"/web/js/bootstrap.bundle.min.js",
-			},
-		},
+		Handler: &handler,
 	}
-
-	a.ctx.Logger.Infof("Start client HTTP server on %d port", a.ctx.Config.Client.Port)
 
 	return serv.ListenAndServe()
 }

@@ -63,13 +63,12 @@ func tasksToExportData(tasks task.Tasks) (d exportData) {
 }
 
 // NewTaskRenderer creates new taskRenderer
-func NewTaskRenderer() taskRenderer {
-	renderer := taskRenderer{
+func NewTaskRenderer() *taskRenderer {
+	renderer := &taskRenderer{
 		renderers: make(map[tools.FileFormat]renderer),
 	}
-	renderer.registerDefaultFormats()
 
-	return renderer
+	return renderer.registerDefaultFormats()
 }
 
 // Renderer of Task
@@ -81,7 +80,7 @@ type taskRenderer struct {
 type renderer = func(data exportData) (*bytes.Buffer, error)
 
 // registerDefaultFormats register supported formats for rendering Task
-func (tr *taskRenderer) registerDefaultFormats() {
+func (tr *taskRenderer) registerDefaultFormats() *taskRenderer {
 	tr.RegisterFormat(tools.FileFormatCSV, tr.toCSV)
 	tr.RegisterFormat(tools.FileFormatDocX, tr.toDOCX)
 	tr.RegisterFormat(tools.FileFormatXLSX, tr.toXLSX)
@@ -89,6 +88,8 @@ func (tr *taskRenderer) registerDefaultFormats() {
 	tr.RegisterFormat(tools.FileFormatJSON, tr.toJSON)
 	tr.RegisterFormat(tools.FileFormatHTML, tr.toHTML)
 	tr.RegisterFormat(tools.FileFormatXML, tr.toXML)
+
+	return tr
 }
 
 // RegisterFormat register new render format
@@ -97,7 +98,7 @@ func (tr *taskRenderer) RegisterFormat(format tools.FileFormat, renderer rendere
 }
 
 // Render Tasks to specified format
-func (tr taskRenderer) Render(format tools.FileFormat, tasks task.Tasks) (*bytes.Buffer, error) {
+func (tr *taskRenderer) Render(format tools.FileFormat, tasks task.Tasks) (*bytes.Buffer, error) {
 	data := tasksToExportData(tasks)
 
 	if renderer, ok := tr.renderers[format]; ok {
@@ -109,22 +110,22 @@ func (tr taskRenderer) Render(format tools.FileFormat, tasks task.Tasks) (*bytes
 }
 
 // toCSV render data to CSV
-func (r taskRenderer) toCSV(data exportData) (*bytes.Buffer, error) {
+func (r *taskRenderer) toCSV(data exportData) (*bytes.Buffer, error) {
 	return nil, ErrNotImplemented
 }
 
 // toPDF render data to PDF
-func (r taskRenderer) toPDF(data exportData) (*bytes.Buffer, error) {
+func (r *taskRenderer) toPDF(data exportData) (*bytes.Buffer, error) {
 	return nil, ErrNotImplemented
 }
 
 // toDOCX render data to DOCX
-func (r taskRenderer) toDOCX(data exportData) (*bytes.Buffer, error) {
+func (r *taskRenderer) toDOCX(data exportData) (*bytes.Buffer, error) {
 	return nil, ErrNotImplemented
 }
 
 // toXML render data to XML
-func (r taskRenderer) toXML(data exportData) (*bytes.Buffer, error) {
+func (r *taskRenderer) toXML(data exportData) (*bytes.Buffer, error) {
 	buf := bytes.NewBuffer(nil)
 	err := xml.NewEncoder(buf).Encode(data)
 
@@ -132,7 +133,7 @@ func (r taskRenderer) toXML(data exportData) (*bytes.Buffer, error) {
 }
 
 // toJSON render data to JSON
-func (r taskRenderer) toJSON(data exportData) (*bytes.Buffer, error) {
+func (r *taskRenderer) toJSON(data exportData) (*bytes.Buffer, error) {
 	buf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(buf).Encode(data)
 
@@ -140,12 +141,12 @@ func (r taskRenderer) toJSON(data exportData) (*bytes.Buffer, error) {
 }
 
 // toXLSX render data to XLSX
-func (r taskRenderer) toXLSX(data exportData) (*bytes.Buffer, error) {
+func (r *taskRenderer) toXLSX(data exportData) (*bytes.Buffer, error) {
 	return nil, ErrNotImplemented
 }
 
 // toHTML render data to HTML
-func (r taskRenderer) toHTML(data exportData) (*bytes.Buffer, error) {
+func (r *taskRenderer) toHTML(data exportData) (*bytes.Buffer, error) {
 	temp, err := template.ParseFiles("./templates/export_tasks.html")
 
 	if err != nil {

@@ -130,31 +130,66 @@ func NewSyncMap[K comparable, V any]() SyncMap[K, V] {
 	}
 }
 
-func (m *SyncMap[K, V]) Get(key K) (V, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+func (m *SyncMap[K, V]) Values() []V {
+	result := make([]V, 0, len(m.items))
 
-	v, ok := m.items[key]
-	return v, ok
+	m.withRLock(func(items map[K]V) {
+		for _, v := range items {
+			result = append(result, v)
+		}
+	})
+
+	return result
+}
+
+func (m *SyncMap[K, V]) Keys() []K {
+	result := make([]K, 0, len(m.items))
+
+	m.withRLock(func(items map[K]V) {
+		for k := range items {
+			result = append(result, k)
+		}
+	})
+
+	return result
+}
+
+func (m *SyncMap[K, V]) Get(key K) (v V, ok bool) {
+	m.withRLock(func(items map[K]V) {
+		v, ok = m.items[key]
+	})
+
+	return
 }
 
 func (m *SyncMap[K, V]) Set(k K, v V) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	m.items[k] = v
+	m.withLock(func(items map[K]V) {
+		items[k] = v
+	})
 }
 
 func (m *SyncMap[K, V]) Clear() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	m.items = make(map[K]V)
+	m.withLock(func(items map[K]V) {
+		m.items = make(map[K]V)
+	})
 }
 
 func (m *SyncMap[K, V]) Delete(k K) {
+	m.withLock(func(items map[K]V) {
+		delete(items, k)
+	})
+}
+
+func (m *SyncMap[K, V]) withRLock(cb func(items map[K]V)) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	cb(m.items)
+}
+
+func (m *SyncMap[K, V]) withLock(cb func(items map[K]V)) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	delete(m.items, k)
+	cb(m.items)
 }

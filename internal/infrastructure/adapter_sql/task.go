@@ -10,18 +10,18 @@ import (
 
 // Task repository
 type taskRepository struct {
-	baseRepository
+	*baseRepository
 }
 
-// Creates new taskRepository
-func NewTaskRepository(client SQLClient) *taskRepository {
+// NewTaskRepository creates new taskRepository
+func NewTaskRepository(client *SQLClient) *taskRepository {
 	return &taskRepository{
 		baseRepository: newBaseRepository(client),
 	}
 }
 
-// Get list of Task
-func (r taskRepository) GetList(ctx context.Context, params *task.TaskParams) ([]task.Task, error) {
+// GetList get list of Task
+func (r *taskRepository) GetList(ctx context.Context, params task.TaskParams) (task.Tasks, error) {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
@@ -32,21 +32,21 @@ func (r taskRepository) GetList(ctx context.Context, params *task.TaskParams) ([
 	return result, err
 }
 
-// Get one Task by id
-func (r taskRepository) GetOne(ctx context.Context, id int64) (t task.Task, err error) {
+// GetOne get one Task by id
+func (r *taskRepository) GetOne(ctx context.Context, id int64) (t task.Task, err error) {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	db := r.client.GetExecutor(ctx)
 
 	query := fmt.Sprintf("%s WHERE t.id = $1", getTaskQuery)
-	err = db.GetContext(ctx, &t, query)
+	err = db.GetContext(ctx, &t, query, id)
 
 	return
 }
 
-// Save Task
-func (r taskRepository) Insert(ctx context.Context, t *task.Task) error {
+// Create new Task
+func (r *taskRepository) Create(ctx context.Context, t *task.Task) error {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
@@ -63,7 +63,7 @@ func (r taskRepository) Insert(ctx context.Context, t *task.Task) error {
 }
 
 // Update Task
-func (r taskRepository) Update(ctx context.Context, t *task.Task) error {
+func (r *taskRepository) Update(ctx context.Context, t *task.Task) error {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
@@ -75,18 +75,18 @@ func (r taskRepository) Update(ctx context.Context, t *task.Task) error {
 }
 
 // Delete Task by id
-func (r taskRepository) Delete(ctx context.Context, id int64) error {
+func (r *taskRepository) Delete(ctx context.Context, id int64) error {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	db := r.client.GetExecutor(ctx)
-
 	_, err := db.ExecContext(ctx, deleteTaskQuery, id)
 
 	return err
 }
 
-func makeGetTaskQuery(p *task.TaskParams) string {
+// makeGetTaskQuery build query from TaskParams
+func makeGetTaskQuery(p task.TaskParams) string {
 	query := getTaskQuery
 	var conditions []string
 
@@ -153,5 +153,6 @@ const (
 	insertTaskQuery = `
 		INSERT INTO tasks (user_id, task_id, status, description, work_begin, work_end, date)
 		VALUES (:user_id, :task_id, :status, :description, :work_begin, :work_end, :date)
+		RETURNING id;
 	`
 )

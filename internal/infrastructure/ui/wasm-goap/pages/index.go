@@ -23,6 +23,8 @@ func (inp *indexPage) OnMount(ctx app.Context) {
 		ctx.Navigate("/login")
 		return
 	}
+
+	inp.Ctx.Websocket.Connect(inp.Ctx.Store.GetUser().Tokens.AccessToken)
 }
 
 func (inp *indexPage) GroupBtn() app.HTMLDiv {

@@ -4,18 +4,18 @@ import (
 	"accounter/internal/domain/task"
 	"accounter/pkg/tools"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-func (e v1Engine) getTasksList(c *gin.Context) {
+func (e *v1Engine) getTasksList(c *gin.Context) {
+	user := e.getCurrentUser(c)
 	params := task.NewTaskParams()
 
 	if err := c.ShouldBind(params); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if result, err := e.taskService.GetTaskList(c, params); err != nil {
+	} else if result, err := e.taskService.GetTaskList(user, params); err != nil {
 		e.writeErr(c, http.StatusInternalServerError, err)
 
 	} else {
@@ -23,14 +23,14 @@ func (e v1Engine) getTasksList(c *gin.Context) {
 	}
 }
 
-func (e v1Engine) saveTask(c *gin.Context) {
-
+func (e *v1Engine) saveTask(c *gin.Context) {
+	user := e.getCurrentUser(c)
 	var form task.Task
 
 	if err := c.ShouldBind(&form); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if err := e.taskService.SaveTask(c, &form); err != nil {
+	} else if err := e.taskService.SaveTask(user, &form); err != nil {
 		e.writeErr(c, http.StatusInternalServerError, err)
 
 	} else {
@@ -38,11 +38,16 @@ func (e v1Engine) saveTask(c *gin.Context) {
 	}
 }
 
-func (e v1Engine) deleteTask(c *gin.Context) {
-	if id, err := strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
+func (e *v1Engine) deleteTask(c *gin.Context) {
+	user := e.getCurrentUser(c)
+
+	if id, err := e.parseID(c); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if err = e.taskService.DeleteTask(c, id); err != nil {
+	} else if task, err := e.taskService.GetTask(user, id); err != nil {
+		e.writeErr(c, http.StatusNotFound, err)
+
+	} else if err = e.taskService.DeleteTask(user, &task); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
 	} else {
@@ -50,14 +55,15 @@ func (e v1Engine) deleteTask(c *gin.Context) {
 	}
 }
 
-func (e v1Engine) exportTasks(c *gin.Context) {
+func (e *v1Engine) exportTasks(c *gin.Context) {
+	user := e.getCurrentUser(c)
 	format := tools.FileFormat(c.Param("format"))
 	params := task.NewTaskParams()
 
 	if err := c.ShouldBind(params); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if result, err := e.taskService.GetTaskList(c, params); err != nil {
+	} else if result, err := e.taskService.GetTaskList(user, params); err != nil {
 		e.writeErr(c, http.StatusInternalServerError, err)
 
 	} else if result, err := e.taskService.ExportTasks(result, format); err != nil {
