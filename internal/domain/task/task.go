@@ -12,6 +12,7 @@ type Tasks []Task
 func (tasks Tasks) Empty() bool { return tasks.Len() == 0 }
 func (tasks Tasks) Len() int    { return len(tasks) }
 
+// GetPrice get total price of Tasks
 func (tasks Tasks) GetPrice() (price float32) {
 	for i := range tasks {
 		price += tasks[i].GetPrice()
@@ -20,6 +21,7 @@ func (tasks Tasks) GetPrice() (price float32) {
 	return tools.ToFixed(price, 2)
 }
 
+// GetDuration get total duration of Tasks
 func (tasks Tasks) GetDuration() (duration time.Duration) {
 	for i := range tasks {
 		duration += tasks[i].GetDuration()
@@ -28,6 +30,7 @@ func (tasks Tasks) GetDuration() (duration time.Duration) {
 	return
 }
 
+// GroupByUsers group Tasks by User id
 func (tasks Tasks) GroupByUsers() *tools.OrderedMap[string, Tasks] {
 	result := tools.NewOrderedMap[string, Tasks]()
 
@@ -42,6 +45,7 @@ func (tasks Tasks) GroupByUsers() *tools.OrderedMap[string, Tasks] {
 	return result
 }
 
+// GroupByDates group Tasks by date
 func (tasks Tasks) GroupByDates() *tools.OrderedMap[int64, Tasks] {
 	result := tools.NewOrderedMap[int64, Tasks]()
 
@@ -56,18 +60,12 @@ func (tasks Tasks) GroupByDates() *tools.OrderedMap[int64, Tasks] {
 	return result
 }
 
-func NewTask() Task {
-	now := time.Now()
-
-	return Task{
-		Status:    "completed",
-		WorkBegin: time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, now.Location()).Unix(),
-		WorkEnd:   time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, now.Location()).Unix(),
-		Date:      now.Unix(),
-	}
+// Fields for detect differences on update Event
+var ComparationFields = [...]string{
+	"UserID", "TaskID", "Status", "Description", "WorkBegin", "WorkEnd", "Date",
 }
 
-// Task model
+// Task entity
 type Task struct {
 	ID           int64   `db:"id,omitempty" json:"id,omitempty"`
 	UserID       int64   `db:"user_id" json:"user_id"`
@@ -81,22 +79,28 @@ type Task struct {
 	Date         int64   `db:"date" json:"date"`
 }
 
-func (t Task) toMap() tools.Data {
-	result := make(tools.Data)
+// NewTask creates new Task
+func NewTask() Task {
+	now := time.Now()
 
-	result["id"] = tools.ValOrNil(t.ID)
-	result["user_id"] = t.UserID
-	result["description"] = t.Description
-	result["task_id"] = t.TaskID
-	result["status"] = t.Status
-	result["date"] = t.Date
-	result["work_begin"] = t.WorkBegin
-	result["work_end"] = t.WorkEnd
-
-	return result
+	return Task{
+		Status:    "completed",
+		WorkBegin: time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, now.Location()).Unix(),
+		WorkEnd:   time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, now.Location()).Unix(),
+		Date:      now.Unix(),
+	}
 }
 
-func (t *Task) IsValid() bool {
+// SetDate set Task date, begin and end of work
+func (t *Task) SetDate(dt int64) *Task {
+	t.Date = dt
+	t.WorkBegin = tools.SetDateTs(dt, t.WorkBegin)
+	t.WorkEnd = tools.SetDateTs(dt, t.WorkEnd)
+	return t
+}
+
+// IsValid Task complete validation
+func (t Task) IsValid() bool {
 	if tools.IsSomeEmpty(t.UserID, t.Date, t.WorkBegin, t.WorkEnd) {
 		return false
 	}
@@ -108,40 +112,50 @@ func (t *Task) IsValid() bool {
 	return true
 }
 
-func (t *Task) SetDate(dt int64) *Task {
-	t.Date = dt
-	t.WorkBegin = tools.SetDateTs(dt, t.WorkBegin)
-	t.WorkEnd = tools.SetDateTs(dt, t.WorkEnd)
-	return t
-}
-
-func (t *Task) GetPrice() float32 {
+// GetPrice get Task price by hours*price per hour
+func (t Task) GetPrice() float32 {
 	hours := float32(t.GetDuration().Hours())
 	return tools.ToFixed(hours*t.PricePerHour, 2)
 }
 
-func (t *Task) FormatPrice() string {
+// FormatPrice string representation of price
+func (t Task) FormatPrice() string {
 	price := t.GetPrice()
 
 	return fmt.Sprintf("%.2f", price)
 }
 
-func (t *Task) FormatDate() string {
+// FormatDate string representation of date
+func (t Task) FormatDate() string {
 	return time.Unix(t.Date, 0).Format("02.01.2006")
 }
 
-func (t *Task) FormatWorkBegin() string {
+// FormatWorkBegin string representation of work begin
+func (t Task) FormatWorkBegin() string {
 	return time.Unix(t.WorkBegin, 0).Format("15:04")
 }
 
-func (t *Task) FormatWorkEnd() string {
+// FormatWorkEnd string representation of work end
+func (t Task) FormatWorkEnd() string {
 	return time.Unix(t.WorkEnd, 0).Format("15:04")
 }
 
-func (t *Task) FormatDuration(withSeconds bool) string {
+// FormatDuration string representation of time duration
+func (t Task) FormatDuration(withSeconds bool) string {
 	return tools.FormatDuration(t.GetDuration(), withSeconds)
 }
 
-func (t *Task) GetDuration() time.Duration {
+// GetDuration get duration between work begin and work end dates
+func (t Task) GetDuration() time.Duration {
 	return time.Unix(t.WorkEnd, 0).Sub(time.Unix(t.WorkBegin, 0))
+}
+
+// GetID return Task id
+func (t Task) GetID() int64 {
+	return t.ID
+}
+
+// GetType return type of Task object
+func (t Task) GetType() string {
+	return "task"
 }

@@ -6,13 +6,13 @@ import "context"
 type UserRepository interface {
 
 	// Get list of User
-	GetList(ctx context.Context) ([]User, error)
+	GetList(ctx context.Context) (Users, error)
 
 	// Get one User by id
 	GetOne(ctx context.Context, id int64) (User, error)
 
 	// Create User
-	Insert(ctx context.Context, user *User) error
+	Create(ctx context.Context, user *User) error
 
 	// Update User
 	Update(ctx context.Context, user *User) error

@@ -1,7 +1,12 @@
-package tools
+package shared
 
 import (
 	"fmt"
+)
+
+const (
+	ResponseOK    = "OK"
+	ResponseError = "error"
 )
 
 // Response struct

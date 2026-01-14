@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS public.events (
+    id BIGSERIAL NOT NULL,
+    user_id BIGINT NOT NULL,
+    object_id BIGINT NOT NULL,
+    object_type CHARACTER VARYING(50) NOT NULL,
+    type CHARACTER VARYING(50) NOT NULL,
+    path CHARACTER VARYING(50) NOT NULL,
+    date TIMESTAMP WITH TIME ZONE NOT NULL,
+    updates JSONB,
+    PRIMARY KEY (id)
+);

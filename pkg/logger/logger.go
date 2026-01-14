@@ -1,33 +1,33 @@
 package logger
 
 import (
+	"accounter/pkg/tools"
 	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"strings"
 	"text/template"
 )
 
-// Log flags
-const logsFlag = log.Ldate | log.Ltime
-
 // Print colors
 const (
-	prefixInfo    = "\033[32m[INFO]: "
-	prefixDebug   = "\033[34m[DEBUG]: "
-	prefixError   = "\033[31m[ERROR]: "
-	prefixWarning = "\033[33m[WARNING]: "
+	prefixInfo    = "\033[32m[INFO]:"
+	prefixDebug   = "\033[34m[DEBUG]:"
+	prefixError   = "\033[31m[ERROR]:"
+	prefixWarning = "\033[33m[WARNING]:"
 )
 
 // Logger log wrapper with 4 log levels: INFO, DEBUG, ERROR, WARNING
 // at production mode write logs to files
 type Logger struct {
-	ErrOut   *log.Logger
-	InfoOut  *log.Logger
-	WarnOut  *log.Logger
-	DebugOut *log.Logger
-	outputs  []*os.File
+	debugMode bool
+	ErrOut    *log.Logger
+	InfoOut   *log.Logger
+	WarnOut   *log.Logger
+	DebugOut  *log.Logger
+	outputs   []*os.File
 }
 
 // Close all output files
@@ -111,20 +111,32 @@ func (l Logger) Fatalf(format string, args ...any) {
 	os.Exit(1)
 }
 
+// WithPerfix creates new Logger with additional prefixes
+func (l Logger) WithPerfix(prefix ...string) Logger {
+	nl := NewLogger(l.debugMode)
+	p := strings.Join(prefix, ":")
+
+	nl.DebugOut.SetPrefix(tools.StringifyWith(":", nl.DebugOut.Prefix(), p, ":"))
+	nl.InfoOut.SetPrefix(tools.StringifyWith(":", nl.InfoOut.Prefix(), p, ":"))
+	nl.WarnOut.SetPrefix(tools.StringifyWith(":", nl.WarnOut.Prefix(), p, ":"))
+	nl.ErrOut.SetPrefix(tools.StringifyWith(":", nl.ErrOut.Prefix(), p, ":"))
+
+	return nl
+}
+
 // NewLogger create new Logger instance
 // In debug mode write DEBUG logs into stdout, otherwise into dev/null
 // In prod mode write INFO, WARNNING, ERROR into output files
-func NewLogger(debug bool, appMode string, logsPath string) Logger {
-	var l Logger
-
-	l.WarnOut = log.New(os.Stdout, prefixWarning, logsFlag)
-	l.InfoOut = log.New(os.Stdout, prefixInfo, logsFlag)
-	l.ErrOut = log.New(os.Stderr, prefixError, logsFlag)
+func NewLogger(debug bool) (l Logger) {
+	l.debugMode = debug
+	l.WarnOut = log.New(os.Stdout, prefixWarning, log.LstdFlags)
+	l.InfoOut = log.New(os.Stdout, prefixInfo, log.LstdFlags)
+	l.ErrOut = log.New(os.Stderr, prefixError, log.LstdFlags)
 
 	if debug {
-		l.DebugOut = log.New(os.Stdout, prefixDebug, logsFlag)
+		l.DebugOut = log.New(os.Stdout, prefixDebug, log.LstdFlags)
 	} else {
-		l.DebugOut = log.New(io.Discard, prefixDebug, logsFlag)
+		l.DebugOut = log.New(io.Discard, prefixDebug, log.LstdFlags)
 	}
 
 	return l

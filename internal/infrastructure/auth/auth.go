@@ -17,14 +17,14 @@ type AuthService struct {
 }
 
 // Creates new AuthService
-func NewAuthService(repo user.UserRepository) AuthService {
-	return AuthService{
+func NewAuthService(repo user.UserRepository) *AuthService {
+	return &AuthService{
 		repo: repo,
 	}
 }
 
 // Authorize CurrentUser by login and password
-func (s AuthService) LoginByCredentials(ctx context.Context, login, password string, cfg config.Config) (result user.CurrentUser, err error) {
+func (s *AuthService) LoginByCredentials(ctx context.Context, login, password string, cfg config.Config) (result user.CurrentUser, err error) {
 	if u, err := s.repo.GetByCredentials(ctx, login, password); err != nil {
 		return result, err
 
@@ -37,7 +37,7 @@ func (s AuthService) LoginByCredentials(ctx context.Context, login, password str
 }
 
 // Authorize CurrentUser by JWT token
-func (s AuthService) LoginByToken(ctx context.Context, token string, cfg config.Config) (result user.CurrentUser, err error) {
+func (s *AuthService) LoginByToken(ctx context.Context, token string, cfg config.Config) (result user.CurrentUser, err error) {
 	if items := strings.Split(token, " "); len(items) == 2 {
 		token = items[1]
 	}

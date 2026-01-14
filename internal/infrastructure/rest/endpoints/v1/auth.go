@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (e v1Engine) loginByCredentials(c *gin.Context) {
+func (e *v1Engine) loginByCredentials(c *gin.Context) {
 	var form struct {
 		Login    string `json:"login"`
 		Password string `json:"password"`
@@ -23,7 +23,7 @@ func (e v1Engine) loginByCredentials(c *gin.Context) {
 	}
 }
 
-func (e v1Engine) loginByToken(c *gin.Context) {
+func (e *v1Engine) loginByToken(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 
 	if result, err := e.authService.LoginByToken(c, token, e.cfg); err != nil {

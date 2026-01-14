@@ -2,6 +2,8 @@ package v1
 
 import (
 	"accounter/config"
+	"accounter/internal/domain/event"
+	"accounter/internal/domain/shared"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
 	"accounter/pkg/logger"
@@ -10,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,8 +22,9 @@ type v1Engine struct {
 	cfg    config.Config
 	logger logger.Logger
 
-	taskService      task.TaskService
-	userService      user.UserService
+	taskService      *task.TaskService
+	userService      *user.UserService
+	eventService     *event.EventService
 	authService      authService
 	websocketService websocketService
 }
@@ -37,13 +41,14 @@ type authService interface {
 }
 
 // Creates new v1Engine
-func NewEngine(params EngineParams) v1Engine {
-	return v1Engine{
+func NewEngine(params EngineParams) *v1Engine {
+	return &v1Engine{
 		cfg:              params.Config,
 		logger:           params.Logger,
 		authService:      params.AuthService,
 		taskService:      params.TaskService,
 		userService:      params.UserService,
+		eventService:     params.EventService,
 		websocketService: params.WebsocketService,
 	}
 }
@@ -52,14 +57,27 @@ func NewEngine(params EngineParams) v1Engine {
 type EngineParams struct {
 	Config           config.Config
 	Logger           logger.Logger
-	TaskService      task.TaskService
-	UserService      user.UserService
+	TaskService      *task.TaskService
+	UserService      *user.UserService
+	EventService     *event.EventService
 	AuthService      authService
 	WebsocketService websocketService
 }
 
+// getCurrentUser return CurrentUser from request context (Middlewares)
+func (e *v1Engine) getCurrentUser(c *gin.Context) user.CurrentUser {
+	user := c.MustGet("user").(user.CurrentUser)
+
+	return user
+}
+
+// parseID parse ID from url query
+func (e *v1Engine) parseID(c *gin.Context) (int64, error) {
+	return strconv.ParseInt(c.Param("id"), 10, 64)
+}
+
 // RegisterRoutes register V1 routes
-func (e v1Engine) RegisterRoutes(s *gin.Engine) {
+func (e *v1Engine) RegisterRoutes(s *gin.Engine) {
 	v1 := s.Group("/api/v1")
 
 	v1.GET("websocket", func(ctx *gin.Context) {
@@ -83,11 +101,14 @@ func (e v1Engine) RegisterRoutes(s *gin.Engine) {
 		POST("/save", e.saveTask).
 		DELETE("/delete/:id", e.deleteTask).
 		GET("/export/:format", e.exportTasks)
+
+	v1.Group("/events").
+		GET("list", e.getEventsList)
 }
 
 // Write success response
-func (e v1Engine) writeOk(c *gin.Context, data any) {
-	resp := tools.Response[any]{
+func (e *v1Engine) writeOk(c *gin.Context, data any) {
+	resp := shared.Response[any]{
 		Data:    data,
 		Success: true,
 		Status:  http.StatusOK,
@@ -97,8 +118,8 @@ func (e v1Engine) writeOk(c *gin.Context, data any) {
 }
 
 // Write error response
-func (e v1Engine) writeErr(c *gin.Context, code int, err error) {
-	resp := tools.Response[any]{
+func (e *v1Engine) writeErr(c *gin.Context, code int, err error) {
+	resp := shared.Response[any]{
 		Status: code,
 		Error:  err.Error(),
 	}
@@ -107,7 +128,7 @@ func (e v1Engine) writeErr(c *gin.Context, code int, err error) {
 }
 
 // Write blob response
-func (e v1Engine) writeBlob(c *gin.Context, format tools.FileFormat, content *bytes.Buffer) {
+func (e *v1Engine) writeBlob(c *gin.Context, format tools.FileFormat, content *bytes.Buffer) {
 	switch format {
 	case tools.FileFormatXLSX:
 		c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

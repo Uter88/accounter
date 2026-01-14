@@ -1,6 +1,7 @@
 package adapter_sql
 
 import (
+	"accounter/config"
 	"context"
 	"database/sql"
 	"fmt"
@@ -19,14 +20,13 @@ const (
 	defaultConnectionTimeout = time.Second * 20
 )
 
-// SQL client
+// SQLClient client fro SQL databases
 type SQLClient struct {
-	driver string
-	dsn    string
-	db     *sqlx.DB
+	cfg config.DBConfig
+	db  *sqlx.DB
 }
 
-// Common sqlx executor
+// Common sqlx executor: sqlx.DB or sqlx.Tx
 type executor interface {
 	sqlx.Ext
 	sqlx.ExtContext
@@ -35,9 +35,9 @@ type executor interface {
 	NamedExecContext(ctx context.Context, query string, arg any) (sql.Result, error)
 }
 
-// Creates new SQLClient
-func NewSQLClient(driver, dsn string) SQLClient {
-	return SQLClient{driver: driver, dsn: dsn}
+// NewSQLClient creates new SQLClient instance
+func NewSQLClient(cfg config.DBConfig) *SQLClient {
+	return &SQLClient{cfg: cfg}
 }
 
 // Connect to database
@@ -45,11 +45,16 @@ func (c *SQLClient) Connect(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, defaultConnectionTimeout)
 	defer cancel()
 
-	if conn, err := sqlx.Open(c.driver, c.dsn); err != nil {
-		return fmt.Errorf("could not create %s DB connection pool: %s", c.driver, err.Error())
+	dsn := fmt.Sprintf(
+		"user=%s password=%s host=%s port=%d dbname=%s sslmode=%s",
+		c.cfg.User, c.cfg.Password, c.cfg.Host, c.cfg.Port, c.cfg.DbName, c.cfg.SSLMode,
+	)
+
+	if conn, err := sqlx.Open(c.cfg.Driver, dsn); err != nil {
+		return fmt.Errorf("could not create %s:%s DB connection pool: %s", c.cfg.Driver, dsn, err.Error())
 
 	} else if err = conn.PingContext(ctx); err != nil {
-		return fmt.Errorf("error ping %s DB connection: %s", c.driver, err.Error())
+		return fmt.Errorf("error ping %s:%s DB connection: %s", c.cfg.Driver, dsn, err.Error())
 
 	} else {
 		c.db = conn
@@ -59,7 +64,7 @@ func (c *SQLClient) Connect(ctx context.Context) error {
 }
 
 // Disconnect from database
-func (c SQLClient) Disconnect() error {
+func (c *SQLClient) Disconnect() error {
 	if c.db != nil {
 		return c.db.Close()
 	}
@@ -68,7 +73,7 @@ func (c SQLClient) Disconnect() error {
 }
 
 // GetExecutor returns transaction from context or common connection
-func (c SQLClient) GetExecutor(ctx context.Context) executor {
+func (c *SQLClient) GetExecutor(ctx context.Context) executor {
 	if tx, ok := ctx.Value(txKey).(*sqlx.Tx); ok {
 		return tx
 	}
@@ -78,7 +83,7 @@ func (c SQLClient) GetExecutor(ctx context.Context) executor {
 
 // BeginTx start new transaction and put it to context
 // in case of error - will auto rollback transactions
-func (c SQLClient) BeginTx(ctx context.Context, cb func(context.Context) error) error {
+func (c *SQLClient) BeginTx(ctx context.Context, cb func(context.Context) error) error {
 	tx, err := c.db.BeginTxx(ctx, nil)
 
 	if err != nil {

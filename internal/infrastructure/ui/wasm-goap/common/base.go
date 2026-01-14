@@ -2,6 +2,7 @@ package common
 
 import (
 	"accounter/config"
+	"accounter/internal/infrastructure/ui/wasm-goap/models"
 	"accounter/internal/infrastructure/ui/wasm-goap/store"
 	"accounter/pkg/logger"
 
@@ -47,7 +48,8 @@ func (h *BaseComponent) ShowConfirm(ctx app.Context, title string) bool {
 
 type AppContext struct {
 	context.Context
-	Store  *store.Store
-	Logger logger.Logger
-	Config config.Config
+	Store     *store.Store
+	Logger    logger.Logger
+	Config    config.Config
+	Websocket *models.WebsocketClient
 }

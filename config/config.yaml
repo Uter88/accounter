@@ -31,10 +31,25 @@ prod: &default
     read_timeout: 20m
     write_timeout: 20m
     websocket:
+      url: ws://localhost:8001/api/v1/websocket
       read_deadline: 1m
       write_deadline: 3s
+      reconnection_interval: 5s
+      ping_interval: 30s
   db:
     driver: postgres
-    dsn: user=uter password=28031988Uter host=192.168.0.107 port=5432 dbname=main
+    user: uter
+    password: 28031988Uter
+    host: localhost
+    port: 5431
+    dbname: main
+    ssl_mode: disable
+  kafka:
+    topic: events
+    group: accounter
+    brokers:
+      - localhost:9092
+    read_timeout: 10s
+    write_timeout: 10s
 dev: 
   <<: *default

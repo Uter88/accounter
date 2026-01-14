@@ -2,6 +2,8 @@ package protocols
 
 import (
 	"accounter/config"
+	"accounter/internal/domain/event"
+	"accounter/internal/domain/shared"
 	"accounter/internal/domain/user"
 	"accounter/pkg/logger"
 	"accounter/pkg/tools"
@@ -13,15 +15,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-)
-
-// Websocket messages type
-type wsMessageType string
-
-const (
-	wsMessageAuth wsMessageType = "authorize"
-	wsMessagePing wsMessageType = "ping"
-	wsMessagePong wsMessageType = "pong"
 )
 
 type (
@@ -59,13 +52,6 @@ type (
 		user user.CurrentUser
 	}
 
-	// Websocket message
-	websocketMessage struct {
-		Type    wsMessageType `json:"type"`
-		Payload any           `json:"payload"`
-		Error   string        `json:"error"`
-	}
-
 	// Authorization service
 	authService interface {
 		LoginByToken(ctx context.Context, token string, cfg config.Config) (result user.CurrentUser, err error)
@@ -90,12 +76,19 @@ func NewWebsocketService(authService authService, cfg config.Config, logger logg
 	}
 }
 
+// Name of websocket service
+func (ws *websocketService) Name() string {
+	return "websocket"
+}
+
 // AcceptConnection accept new connection
 func (ws *websocketService) AcceptConnection(w http.ResponseWriter, r *http.Request, responseHeader http.Header) error {
+	ws.logger.Debugf("new connection, peer: %s", r.RemoteAddr)
+
 	conn, err := ws.Upgrade(w, r, responseHeader)
 
 	if err != nil {
-		ws.logger.Errorf("WS: updrading error: %s", err.Error())
+		ws.logger.Errorf("updrading error: %s", err)
 		return err
 	}
 
@@ -106,10 +99,8 @@ func (ws *websocketService) AcceptConnection(w http.ResponseWriter, r *http.Requ
 		writeDeadline: ws.config.HTTP.Websocket.WriteDeadline,
 	}
 
-	err = ws.handleConnection(wsConn)
-
 	if err = ws.handleConnection(wsConn); err != nil {
-		ws.logger.Errorf("WS: handle connection error: %s", err.Error())
+		ws.handleError(err)
 		return err
 	}
 
@@ -124,48 +115,85 @@ func (ws *websocketService) handleConnection(conn *websocketConn) error {
 		message, err := conn.readMessage()
 
 		if err != nil {
-			return fmt.Errorf("error to read message: %s", err.Error())
+			return err
 		}
 
-		if !conn.user.IsAuthorized {
-			if err = ws.authorize(message, conn); err != nil {
-				return err
-			}
-		}
+		response, err := ws.handleMessage(message, conn)
+		conn.writeMessage(response)
 
-		response := ws.handleMessage(message)
-
-		if err = conn.writeMessage(response); err != nil {
-			return fmt.Errorf("error of write message: %s", err.Error())
+		if err != nil {
+			return fmt.Errorf("fail to handle message: %w", err)
 		}
 	}
 }
 
-// handleMessage handle incomming message
-func (ws *websocketService) handleMessage(msg websocketMessage) (resp websocketMessage) {
-	resp.Type = msg.Type
+// handleError handle websocket procession error
+func (ws *websocketService) handleError(err error) {
+	switch {
+	case err == nil:
+		return
 
-	switch msg.Type {
-	case wsMessagePing:
-		resp.Type = wsMessagePong
+	case websocket.IsCloseError(err, websocket.CloseGoingAway):
+		ws.logger.Debugf("connection closed normal: %s", err.Error())
 
-	case wsMessagePong:
-		resp.Type = wsMessagePing
-
-	case wsMessageAuth:
-		resp.Error = "user is already authorized"
+	case websocket.IsCloseError(err, websocket.CloseAbnormalClosure):
+		ws.logger.Debugf("connection closed abnormal: %s", err.Error())
 
 	default:
-		resp.Error = fmt.Sprintf("invalid message type: %s", msg.Type)
+		ws.logger.Errorf("connection handle error: %s", err)
+	}
+}
+
+// handleMessage handle incomming message
+func (ws *websocketService) handleMessage(msg shared.WebsocketMessage, conn *websocketConn) (resp shared.WebsocketMessage, err error) {
+	resp.Type = msg.Type
+	resp.Payload = shared.ResponseOK
+
+	ws.logger.Debugf("new message: %s", msg)
+
+	if !conn.user.IsAuthorized {
+		if err = ws.authorize(msg, conn); err != nil {
+			resp.SetError(err)
+			return
+		}
+	}
+
+	switch msg.Type {
+	case shared.WsMessagePing, shared.WsMessageAuth:
+		resp.Type = shared.WsMessagePong
+
+	case shared.WsMessagePong:
+		resp.Type = shared.WsMessagePing
+
+	case shared.WsMessageParams:
+		if err = ws.updateParams(msg, conn); err != nil {
+			resp.SetError(err)
+		}
+
+	default:
+		err = fmt.Errorf("invalid message type: %s", msg.Type)
+		resp.SetError(err)
 	}
 
 	return
 }
 
+// updateParams update user params
+func (ws *websocketService) updateParams(msg shared.WebsocketMessage, conn *websocketConn) error {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	if err := msg.Decode(&conn.user.Params); err != nil {
+		return fmt.Errorf("error decode params: %w", err)
+	}
+
+	return nil
+}
+
 // authorize new connection
-func (ws *websocketService) authorize(msg websocketMessage, conn *websocketConn) error {
-	if msg.Type != wsMessageAuth {
-		return fmt.Errorf("bad message type, have %s, want: %s", msg.Type, wsMessageAuth)
+func (ws *websocketService) authorize(msg shared.WebsocketMessage, conn *websocketConn) error {
+	if msg.Type != shared.WsMessageAuth {
+		return fmt.Errorf("bad message type, have %s, want: %s", msg.Type, shared.WsMessageAuth)
 	}
 
 	if token, ok := msg.Payload.(string); !ok {
@@ -196,7 +224,7 @@ func (ws *websocketService) addConnection(conn *websocketConn) {
 	conns = append(conns, conn)
 	ws.connections.Set(conn.user.ID, conns)
 
-	ws.logger.Infof("WS: new connection: %s", conn.user.GetLabel())
+	ws.logger.Debugf("new authorized connection: %s", conn.user.GetLabel())
 }
 
 // removeConnection remove connection from local store
@@ -221,11 +249,59 @@ func (ws *websocketService) removeConnection(conn *websocketConn) {
 		ws.connections.Delete(conn.user.ID)
 	}
 
-	ws.logger.Infof("WS: client disconnected: %s", conn.user.GetLabel())
+	ws.logger.Debugf("client disconnected: %s", conn.user.GetLabel())
+}
+
+func (ws *websocketService) SubscribeEvent(event event.Event) error {
+	msg := shared.WebsocketMessage{
+		Type:    shared.WsMessageEvent,
+		Payload: event,
+	}
+
+	for _, conns := range ws.connections.Values() {
+		ws.sendToConnections(msg, conns...)
+	}
+
+	return nil
+}
+
+// FindAndSend sinf users by callback function and send message to it
+func (ws *websocketService) FindAndSend(msg shared.WebsocketMessage, cb func(u user.CurrentUser) bool) {
+	conns := ws.findConnections(cb)
+	ws.sendToConnections(msg, conns...)
+}
+
+// findConnections find connections by callback function
+func (ws *websocketService) findConnections(cb func(u user.CurrentUser) bool) (result []*websocketConn) {
+	for _, conns := range ws.connections.Values() {
+		for _, conn := range conns {
+			if cb(conn.user) {
+				result = append(result, conn)
+			}
+		}
+	}
+
+	return
+}
+
+// SendToUsers send message to users by ids
+func (ws *websocketService) SendToUsers(msg shared.WebsocketMessage, ids ...int64) {
+	for _, id := range ids {
+		if conns, ok := ws.connections.Get(id); ok {
+			ws.sendToConnections(msg, conns...)
+		}
+	}
+}
+
+// sendToConnections send message to connections
+func (ws *websocketService) sendToConnections(msg shared.WebsocketMessage, conns ...*websocketConn) {
+	for _, conn := range conns {
+		conn.writeMessage(msg)
+	}
 }
 
 // writeMessage send message to connection
-func (c *websocketConn) writeMessage(msg websocketMessage) error {
+func (c *websocketConn) writeMessage(msg shared.WebsocketMessage) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -235,7 +311,7 @@ func (c *websocketConn) writeMessage(msg websocketMessage) error {
 }
 
 // readMessage read new message from connection
-func (c *websocketConn) readMessage() (msg websocketMessage, err error) {
+func (c *websocketConn) readMessage() (msg shared.WebsocketMessage, err error) {
 	c.conn.SetReadDeadline(time.Now().Add(c.readDeadline))
 	err = c.conn.ReadJSON(&msg)
 

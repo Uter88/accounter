@@ -1,6 +1,7 @@
 package store
 
 import (
+	"accounter/internal/domain/shared"
 	"accounter/internal/domain/task"
 	"accounter/pkg/tools"
 	"fmt"
@@ -82,6 +83,8 @@ func (s *tasksStore) GetTasks() task.Tasks {
 
 func (s *tasksStore) SetTaskParams(p *task.TaskParams) {
 	s.params = p
+
+	s.ws.SendMessage(shared.WsMessageParams, p)
 }
 
 func (s *tasksStore) GetTaskParams() *task.TaskParams {

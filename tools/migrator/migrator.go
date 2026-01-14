@@ -5,63 +5,24 @@ import (
 	"accounter/internal/infrastructure/adapter_sql"
 	"accounter/pkg/logger"
 	"context"
+	"flag"
 	"fmt"
+	"os"
+	"strings"
+
+	_ "embed"
 )
 
-const SQLiteUserSchema = `CREATE TABLE IF NOT EXISTS users (
-	id INTEGER PRIMARY KEY,
-	login TEXT,
-	password TEXT,
-	name TEXT,
-	surname TEXT,
-	patronymic TEXT,
-	price_per_hour REAL
-);`
-
-const SQLiteTaskSchema = `
-	CREATE TABLE IF NOT EXISTS tasks (
-		id INTEGER PRIMARY KEY,
-		user_id INTEGER,
-		task_id TEXT NULL,
-		status TEXT,
-		description TEXT,
-		work_begin INTEGER,
-		work_end INTEGER,
-		date INTEGER
-	)
-`
-
-const PostgresUserSchema = `
-	CREATE TABLE IF NOT EXISTS public.users (
-		id BIGSERIAL NOT NULL,
-		login CHARACTER VARYING(50) NOT NULL,
-		password CHARACTER VARYING(50) NOT NULL,
-		name CHARACTER VARYING(50) NOT NULL,
-		surname CHARACTER VARYING(50) NOT NULL,
-		patronymic CHARACTER VARYING(50) NOT NULL,
-		price_per_hour NUMERIC(12, 2) NOT NULL,
-		PRIMARY KEY (id)
-);`
-
-const PostgresTaskSchema = `
-	CREATE TABLE IF NOT EXISTS public.tasks (
-    	id BIGSERIAL NOT NULL,
-		user_id BIGINT NOT NULL,
-    	task_id CHARACTER VARYING(30) NOT NULL,
-    	status CHARACTER VARYING(30) NOT NULL,
-    	description TEXT NOT NULL,
-    	work_begin BIGINT NOT NULL,
-    	work_end BIGINT NOT NULL,
-		date BIGINT NOT NULL,
-    	PRIMARY KEY (id)
-	)
-`
+var tables = []string{"users", "tasks", "events"}
 
 func main() {
+	path := flag.String("path", "/migrations", "Path with scripts")
+	flag.Parse()
+
 	ctx, cancel := config.InitGracefulShutdownCtx()
 	cfg := config.InitConfig()
-	logger := logger.NewLogger(cfg.DebugMode, cfg.AppMode, "logs")
-	client := adapter_sql.NewSQLClient(cfg.DB.Driver, cfg.DB.DSN)
+	logger := logger.NewLogger(cfg.DebugMode)
+	client := adapter_sql.NewSQLClient(cfg.DB)
 
 	if err := client.Connect(ctx); err != nil {
 		logger.Fatalln("Fail to migrate:", err.Error())
@@ -72,27 +33,18 @@ func main() {
 		client.Disconnect()
 	}()
 
-	var (
-		usersScheme, tasksScheme string
-	)
+	schemes, err := loadSchemes(*path, cfg.DB.Driver)
 
-	switch cfg.DB.Driver {
-	case "sqlite3":
-		usersScheme = SQLiteUserSchema
-		tasksScheme = SQLiteTaskSchema
-
-	case "postgres":
-		usersScheme = PostgresUserSchema
-		tasksScheme = PostgresTaskSchema
+	if err != nil {
+		logger.Fatalln("Fail to load tables schemes:", err.Error())
 	}
 
-	err := client.BeginTx(ctx, func(ctx context.Context) error {
-		if _, err := client.GetExecutor(ctx).ExecContext(ctx, usersScheme); err != nil {
-			return fmt.Errorf("error migrate users table: %s", err.Error())
-		}
+	err = client.BeginTx(ctx, func(ctx context.Context) error {
 
-		if _, err := client.GetExecutor(ctx).ExecContext(ctx, tasksScheme); err != nil {
-			return fmt.Errorf("error migrate tasks table: %s", err.Error())
+		for _, scheme := range schemes {
+			if _, err := client.GetExecutor(ctx).ExecContext(ctx, scheme); err != nil {
+				return fmt.Errorf("error migrate %s table: %s", scheme, err.Error())
+			}
 		}
 
 		return nil
@@ -103,4 +55,22 @@ func main() {
 	} else {
 		logger.Info("Migrates is success!")
 	}
+}
+
+func loadSchemes(folder, driver string) (result []string, err error) {
+	for _, table := range tables {
+		path, _ := os.Getwd()
+		path = strings.Replace(path, "/tools/migrator", folder, 1)
+		path = fmt.Sprintf("%s/%s/%s.sql", path, driver, table)
+
+		contents, err := os.ReadFile(path)
+
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, string(contents))
+	}
+
+	return
 }

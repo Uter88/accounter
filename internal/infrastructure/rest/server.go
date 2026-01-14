@@ -1,4 +1,4 @@
-package restapi
+package rest
 
 import (
 	"accounter/config"
@@ -19,9 +19,19 @@ type Server struct {
 	logger logger.Logger
 }
 
+// Name server information
+func (s *Server) Name() string {
+	return fmt.Sprintf("HTTP server on 0.0.0.0:%d", s.cfg.HTTP.Port)
+}
+
+// Run start HTTP listener
+func (s *Server) Run(ctx context.Context) error {
+	return s.ListenAndServe()
+}
+
 // NewHTTPServer creates new Server instance
-func NewHTTPServer(ctx context.Context, cfg config.Config, logger logger.Logger, handler http.Handler) Server {
-	return Server{
+func NewHTTPServer(ctx context.Context, cfg config.Config, logger logger.Logger, handler http.Handler) *Server {
+	return &Server{
 		Server: http.Server{
 			Addr:         fmt.Sprintf("0.0.0.0:%d", cfg.HTTP.Port),
 			Handler:      handler,
@@ -30,7 +40,7 @@ func NewHTTPServer(ctx context.Context, cfg config.Config, logger logger.Logger,
 			WriteTimeout: cfg.HTTP.WriteTimeout,
 		},
 		cfg:    cfg,
-		logger: logger,
+		logger: logger.WithPerfix("HTTP"),
 	}
 }
 
@@ -59,6 +69,10 @@ func NewGinServer(cfg config.Config, engines ...Engine) http.Handler {
 	}))
 
 	r.Use(gin.Recovery())
+
+	r.NoRoute(func(ctx *gin.Context) {
+		ctx.AbortWithStatusJSON(404, "Page not found")
+	})
 
 	for _, engine := range engines {
 		engine.RegisterRoutes(r)

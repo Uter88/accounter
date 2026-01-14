@@ -15,7 +15,7 @@ func main() {
 	cfg := config.InitConfig()
 
 	// Create logger
-	logger := logger.NewLogger(cfg.DebugMode, cfg.AppMode, "logs")
+	logger := logger.NewLogger(cfg.DebugMode)
 
 	// Create frontend application instance
 	frontApp := wasmgoap.NewApp(cfg, logger)
@@ -24,7 +24,7 @@ func main() {
 	backendApp := app.NewAppContext(ctx, cfg, logger).Init(ctx)
 
 	// Register background tasks
-	backendApp.RegisterTask("Frontend HTTP server", &frontApp)
+	backendApp.RegisterTask(&frontApp)
 
 	// Defer canceling and shutdown application
 	defer func() {
