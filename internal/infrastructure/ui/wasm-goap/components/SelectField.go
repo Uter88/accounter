@@ -1,7 +1,7 @@
 package components
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"slices"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -138,7 +138,7 @@ func (sf *SelectField[T]) makeInput() app.UI {
 
 func (sf *SelectField[T]) onInput(ctx app.Context, e app.Event) {
 	value := ctx.JSSrc().Get("value").String()
-	newValue := tools.StringToValue[T](value)
+	newValue := utils.StringToValue[T](value)
 
 	if sf.multiple {
 		for i, v := range *sf.Vals {
@@ -173,7 +173,7 @@ func (sf *SelectField[T]) isClearable() bool {
 		return len(*sf.Vals) > 0
 	}
 
-	return !tools.IsEmpty(sf.Val)
+	return !utils.IsEmpty(sf.Val)
 }
 
 func (sf *SelectField[T]) deselect(i int) {

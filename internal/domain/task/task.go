@@ -1,7 +1,7 @@
 package task
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"fmt"
 	"time"
 )
@@ -18,7 +18,7 @@ func (tasks Tasks) GetPrice() (price float32) {
 		price += tasks[i].GetPrice()
 	}
 
-	return tools.ToFixed(price, 2)
+	return utils.ToFixed(price, 2)
 }
 
 // GetDuration get total duration of Tasks
@@ -31,8 +31,8 @@ func (tasks Tasks) GetDuration() (duration time.Duration) {
 }
 
 // GroupByUsers group Tasks by User id
-func (tasks Tasks) GroupByUsers() *tools.OrderedMap[string, Tasks] {
-	result := tools.NewOrderedMap[string, Tasks]()
+func (tasks Tasks) GroupByUsers() *utils.OrderedMap[string, Tasks] {
+	result := utils.NewOrderedMap[string, Tasks]()
 
 	for _, t := range tasks {
 		items, _ := result.Get(t.UserLabel)
@@ -46,8 +46,8 @@ func (tasks Tasks) GroupByUsers() *tools.OrderedMap[string, Tasks] {
 }
 
 // GroupByDates group Tasks by date
-func (tasks Tasks) GroupByDates() *tools.OrderedMap[int64, Tasks] {
-	result := tools.NewOrderedMap[int64, Tasks]()
+func (tasks Tasks) GroupByDates() *utils.OrderedMap[int64, Tasks] {
+	result := utils.NewOrderedMap[int64, Tasks]()
 
 	for _, t := range tasks {
 		items, _ := result.Get(t.Date)
@@ -94,18 +94,18 @@ func NewTask() Task {
 // SetDate set Task date, begin and end of work
 func (t *Task) SetDate(dt int64) *Task {
 	t.Date = dt
-	t.WorkBegin = tools.SetDateTs(dt, t.WorkBegin)
-	t.WorkEnd = tools.SetDateTs(dt, t.WorkEnd)
+	t.WorkBegin = utils.SetDateTs(dt, t.WorkBegin)
+	t.WorkEnd = utils.SetDateTs(dt, t.WorkEnd)
 	return t
 }
 
 // IsValid Task complete validation
 func (t Task) IsValid() bool {
-	if tools.IsSomeEmpty(t.UserID, t.Date, t.WorkBegin, t.WorkEnd) {
+	if utils.IsSomeEmpty(t.UserID, t.Date, t.WorkBegin, t.WorkEnd) {
 		return false
 	}
 
-	if tools.IsSomeEmpty(t.Description, t.Status) {
+	if utils.IsSomeEmpty(t.Description, t.Status) {
 		return false
 	}
 
@@ -115,7 +115,7 @@ func (t Task) IsValid() bool {
 // GetPrice get Task price by hours*price per hour
 func (t Task) GetPrice() float32 {
 	hours := float32(t.GetDuration().Hours())
-	return tools.ToFixed(hours*t.PricePerHour, 2)
+	return utils.ToFixed(hours*t.PricePerHour, 2)
 }
 
 // FormatPrice string representation of price
@@ -142,7 +142,7 @@ func (t Task) FormatWorkEnd() string {
 
 // FormatDuration string representation of time duration
 func (t Task) FormatDuration(withSeconds bool) string {
-	return tools.FormatDuration(t.GetDuration(), withSeconds)
+	return utils.FormatDuration(t.GetDuration(), withSeconds)
 }
 
 // GetDuration get duration between work begin and work end dates

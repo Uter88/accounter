@@ -1,7 +1,7 @@
 package task
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"time"
 )
 
@@ -32,8 +32,8 @@ func NewTaskParams() TaskParams {
 }
 
 // Encode encode params to tools.Params
-func (tp TaskParams) Encode() tools.Params {
-	params := tools.NewParams()
+func (tp TaskParams) Encode() utils.Params {
+	params := utils.NewParams()
 
 	params.Set("date_start", tp.DateStart)
 	params.Set("date_end", tp.DateEnd)

@@ -1,8 +1,8 @@
 package task
 
 import (
-	"accounter/internal/domain/shared"
-	"accounter/pkg/tools"
+	"accounter/internal/domain/common"
+	"accounter/pkg/utils"
 	"bytes"
 	"context"
 )
@@ -24,18 +24,18 @@ func NewTaskService(repo TaskRepository, renderer TaskRenderer, eventBus TaskEve
 }
 
 // Get Task list
-func (ts *TaskService) GetTaskList(ctx shared.Context, params TaskParams) (Tasks, error) {
+func (ts *TaskService) GetTaskList(ctx common.Context, params TaskParams) (Tasks, error) {
 	return ts.repo.GetList(ctx, params)
 }
 
 // GetTask get one Task by id
-func (ts *TaskService) GetTask(ctx shared.Context, id int64) (Task, error) {
+func (ts *TaskService) GetTask(ctx common.Context, id int64) (Task, error) {
 	return ts.repo.GetOne(ctx, id)
 }
 
 // Save create or update Task
-func (ts *TaskService) SaveTask(ctx shared.Context, task *Task) error {
-	if tools.IsEmpty(task.ID) {
+func (ts *TaskService) SaveTask(ctx common.Context, task *Task) error {
+	if utils.IsEmpty(task.ID) {
 		return ts.createTask(ctx, task)
 	}
 
@@ -43,7 +43,7 @@ func (ts *TaskService) SaveTask(ctx shared.Context, task *Task) error {
 }
 
 // updateTask updates exitance Task
-func (ts *TaskService) updateTask(ctx shared.Context, task *Task) error {
+func (ts *TaskService) updateTask(ctx common.Context, task *Task) error {
 	userID := ctx.GetID()
 	oldTask, err := ts.repo.GetOne(ctx, task.ID)
 
@@ -61,7 +61,7 @@ func (ts *TaskService) updateTask(ctx shared.Context, task *Task) error {
 }
 
 // createTask creates new Task
-func (ts *TaskService) createTask(ctx shared.Context, task *Task) error {
+func (ts *TaskService) createTask(ctx common.Context, task *Task) error {
 	userID := ctx.GetID()
 
 	return ts.repo.WithTx(ctx, func(ctx context.Context) error {
@@ -74,7 +74,7 @@ func (ts *TaskService) createTask(ctx shared.Context, task *Task) error {
 }
 
 // Delete Task
-func (ts *TaskService) DeleteTask(ctx shared.Context, task *Task) error {
+func (ts *TaskService) DeleteTask(ctx common.Context, task *Task) error {
 	userID := ctx.GetID()
 
 	return ts.repo.WithTx(ctx, func(ctx context.Context) error {
@@ -91,6 +91,6 @@ func (ts *TaskService) DeleteTask(ctx shared.Context, task *Task) error {
 }
 
 // Export Tasks by specified format
-func (ts *TaskService) ExportTasks(tasks Tasks, format tools.FileFormat) (*bytes.Buffer, error) {
+func (ts *TaskService) ExportTasks(tasks Tasks, format utils.FileFormat) (*bytes.Buffer, error) {
 	return ts.renderer.Render(format, tasks)
 }

@@ -1,7 +1,7 @@
 package components
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"fmt"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -122,7 +122,7 @@ func (d *Dialog) Visible(v bool) *Dialog {
 func (d *Dialog) getClasses() (result []string) {
 	result = append(result, "modal-dialog")
 
-	if !tools.IsEmpty(d.size) {
+	if !utils.IsEmpty(d.size) {
 		result = append(result, fmt.Sprintf("modal-%s", d.size))
 	}
 

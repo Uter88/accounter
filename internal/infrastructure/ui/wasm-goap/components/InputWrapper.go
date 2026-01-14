@@ -1,7 +1,7 @@
 package components
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -66,14 +66,14 @@ func (iw *InputWrapper) Wrap(content ...app.UI) app.UI {
 	return app.Div().
 		Class(iw.wrapClass).
 		Body(
-			app.If(!tools.IsEmptyValue(iw.label), func() app.UI {
+			app.If(!utils.IsEmptyValue(iw.label), func() app.UI {
 				return NewInputLabel(iw.label, iw.inputID).Required(iw.required).LabelClass(iw.labelClass)
 			}),
 
 			app.Div().
 				Class("input-group").
 				Body(
-					app.If(!tools.IsEmptyValue(iw.prependIcon), func() app.UI {
+					app.If(!utils.IsEmptyValue(iw.prependIcon), func() app.UI {
 						return app.Div().Class("input-group-prepend").Body(
 							NewIcon(iw.prependIcon).Class("input-group-text"),
 						)

@@ -2,11 +2,11 @@ package store
 
 import (
 	"accounter/config"
-	"accounter/internal/domain/shared"
+	"accounter/internal/domain/common"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
 	"accounter/internal/infrastructure/ui/wasm-goap/models"
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"encoding/base64"
 	"fmt"
 	"strings"
@@ -80,8 +80,8 @@ func (b *baseStore) IsAuthorized() bool {
 	return b.user.IsAuthorized
 }
 
-func newRequest[R any](s baseStore) tools.Request[shared.Response[R]] {
-	params := tools.NewRequest[shared.Response[R]](s.api)
+func newRequest[R any](s baseStore) utils.Request[common.Response[R]] {
+	params := utils.NewRequest[common.Response[R]](s.api)
 
 	if s.user.IsAuthorized {
 		params = params.Headers(map[string]string{

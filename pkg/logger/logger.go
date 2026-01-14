@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"bytes"
 	"fmt"
 	"io"
@@ -116,10 +116,10 @@ func (l Logger) WithPerfix(prefix ...string) Logger {
 	nl := NewLogger(l.debugMode)
 	p := strings.Join(prefix, ":")
 
-	nl.DebugOut.SetPrefix(tools.StringifyWith(":", nl.DebugOut.Prefix(), p, ":"))
-	nl.InfoOut.SetPrefix(tools.StringifyWith(":", nl.InfoOut.Prefix(), p, ":"))
-	nl.WarnOut.SetPrefix(tools.StringifyWith(":", nl.WarnOut.Prefix(), p, ":"))
-	nl.ErrOut.SetPrefix(tools.StringifyWith(":", nl.ErrOut.Prefix(), p, ":"))
+	nl.DebugOut.SetPrefix(utils.StringifyWith(":", nl.DebugOut.Prefix(), p, ":"))
+	nl.InfoOut.SetPrefix(utils.StringifyWith(":", nl.InfoOut.Prefix(), p, ":"))
+	nl.WarnOut.SetPrefix(utils.StringifyWith(":", nl.WarnOut.Prefix(), p, ":"))
+	nl.ErrOut.SetPrefix(utils.StringifyWith(":", nl.ErrOut.Prefix(), p, ":"))
 
 	return nl
 }

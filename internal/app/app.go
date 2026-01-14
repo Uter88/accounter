@@ -5,14 +5,14 @@ import (
 	"accounter/internal/domain/event"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
-	"accounter/internal/infrastructure/adapter_sql"
+	"accounter/internal/infrastructure/adapters/postgres"
 	"accounter/internal/infrastructure/auth"
 	comparator "accounter/internal/infrastructure/comparators"
-	"accounter/internal/infrastructure/protocols"
-	"accounter/internal/infrastructure/queues"
+	"accounter/internal/infrastructure/messaging/kafka"
 	"accounter/internal/infrastructure/renderers"
-	"accounter/internal/infrastructure/rest"
-	v1 "accounter/internal/infrastructure/rest/endpoints/v1"
+	"accounter/internal/infrastructure/transport/rest"
+	v1 "accounter/internal/infrastructure/transport/rest/endpoints/v1"
+	"accounter/internal/infrastructure/transport/websocket"
 
 	"accounter/pkg/logger"
 	"context"
@@ -30,10 +30,10 @@ type AppContext struct {
 	logger logger.Logger
 
 	// Database client
-	db *adapter_sql.SQLClient
+	db *postgres.SQLClient
 
 	// Message queue broker
-	mq *queues.KafkaBroker
+	mq *kafka.KafkaBroker
 
 	// Background tasks map
 	tasks map[string]bgTask
@@ -98,9 +98,9 @@ func (a *AppContext) initConnections(ctx context.Context) *AppContext {
 func (a *AppContext) initServices(ctx context.Context) *AppContext {
 
 	// Init repositories
-	userRepo := adapter_sql.NewUserRepository(a.db)
-	taskRepo := adapter_sql.NewTaskRepository(a.db)
-	eventRepo := adapter_sql.NewEventRepository(a.db)
+	userRepo := postgres.NewUserRepository(a.db)
+	taskRepo := postgres.NewTaskRepository(a.db)
+	eventRepo := postgres.NewEventRepository(a.db)
 
 	// Init main services
 
@@ -124,7 +124,7 @@ func (a *AppContext) initServices(ctx context.Context) *AppContext {
 	)
 
 	// Init websocket service
-	websocketService := protocols.NewWebsocketService(
+	websocketService := websocket.NewWebsocketService(
 		authService,
 		a.config,
 		a.logger.WithPerfix("WS"),
@@ -177,8 +177,8 @@ func NewAppContext(ctx context.Context, cfg config.Config, logger logger.Logger)
 	return &AppContext{
 		config: cfg,
 		logger: logger.WithPerfix("APP"),
-		db:     adapter_sql.NewSQLClient(cfg.DB),
-		mq:     queues.NewBroker(ctx, cfg, logger.WithPerfix("KAFKA")),
+		db:     postgres.NewSQLClient(cfg.DB),
+		mq:     kafka.NewBroker(ctx, cfg, logger.WithPerfix("KAFKA")),
 		tasks:  make(map[string]bgTask),
 	}
 }

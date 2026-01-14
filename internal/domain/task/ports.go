@@ -1,8 +1,8 @@
 package task
 
 import (
-	"accounter/internal/domain/shared"
-	"accounter/pkg/tools"
+	"accounter/internal/domain/common"
+	"accounter/pkg/utils"
 	"bytes"
 	"context"
 )
@@ -31,17 +31,17 @@ type TaskRepository interface {
 
 // TaskRenderer Task renderer to varoius formats
 type TaskRenderer interface {
-	Render(format tools.FileFormat, tasks Tasks) (*bytes.Buffer, error)
+	Render(format utils.FileFormat, tasks Tasks) (*bytes.Buffer, error)
 }
 
 // TaskEventsBus events bus for Task actions
 type TaskEventsBus interface {
 	// Trigger for create Task event
-	OnCreate(ctx context.Context, userID int64, obj shared.Entity) error
+	OnCreate(ctx context.Context, userID int64, obj common.Entity) error
 
 	// Trigger for update Task event
-	OnUpdate(ctx context.Context, userID int64, old, new shared.Entity) error
+	OnUpdate(ctx context.Context, userID int64, old, new common.Entity) error
 
 	// Trigger for delete Task event
-	OnDelete(ctx context.Context, userID int64, obj shared.Entity) error
+	OnDelete(ctx context.Context, userID int64, obj common.Entity) error
 }

@@ -1,8 +1,8 @@
 package user
 
 import (
-	"accounter/internal/domain/shared"
-	"accounter/pkg/tools"
+	"accounter/internal/domain/common"
+	"accounter/pkg/utils"
 	"context"
 )
 
@@ -27,8 +27,8 @@ func (s *UserService) GetUser(ctx context.Context, id int64) (User, error) {
 }
 
 // SaveUser create/update User
-func (s *UserService) SaveUser(ctx shared.Context, user *User) error {
-	if tools.IsEmpty(user.ID) {
+func (s *UserService) SaveUser(ctx common.Context, user *User) error {
+	if utils.IsEmpty(user.ID) {
 		return s.repo.Create(ctx, user)
 	}
 
@@ -36,7 +36,7 @@ func (s *UserService) SaveUser(ctx shared.Context, user *User) error {
 }
 
 // DeleteUser delete User
-func (s *UserService) DeleteUser(ctx shared.Context, user *User) error {
+func (s *UserService) DeleteUser(ctx common.Context, user *User) error {
 	return s.repo.Delete(ctx, user.ID)
 }
 
@@ -44,7 +44,7 @@ func (s *UserService) DeleteUser(ctx shared.Context, user *User) error {
 func (s *UserService) CheckUniqueLogin(ctx context.Context, login string) (exists bool, err error) {
 	_, err = s.repo.GetByCredentials(ctx, login, "")
 
-	if tools.IsNotFoundError(err) {
+	if utils.IsNotFoundError(err) {
 		return false, nil
 
 	} else if err == nil {

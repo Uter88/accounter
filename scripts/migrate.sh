@@ -1,1 +1,1 @@
-go run tools/migrator/migrator.go
+go run cmd/migrator/main.go

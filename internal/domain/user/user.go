@@ -1,7 +1,7 @@
 package user
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"fmt"
 )
 
@@ -26,20 +26,20 @@ func (u User) GetLabel() string {
 
 // IsValid check for User data is valid
 func (u User) IsValid(isAuth bool) bool {
-	if err := tools.ValidEmail(u.Login); err != nil {
+	if err := utils.ValidEmail(u.Login); err != nil {
 		return false
 	}
 
 	if isAuth {
-		if tools.IsSomeEmpty(u.Login, u.Password) {
+		if utils.IsSomeEmpty(u.Login, u.Password) {
 			return false
 		}
 	} else {
-		if tools.IsSomeEmpty(u.Login, u.Password, u.Name, u.Surname, u.Patronymic) {
+		if utils.IsSomeEmpty(u.Login, u.Password, u.Name, u.Surname, u.Patronymic) {
 			return false
 		}
 
-		if tools.IsEmptyValue(u.PricePerHour) {
+		if utils.IsEmptyValue(u.PricePerHour) {
 			return false
 		}
 	}

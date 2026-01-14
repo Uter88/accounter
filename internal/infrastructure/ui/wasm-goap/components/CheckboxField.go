@@ -1,7 +1,7 @@
 package components
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"slices"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -86,7 +86,7 @@ func (f *CheckboxField[T]) Render() app.UI {
 		input,
 
 		// Label
-		app.If(!tools.IsEmptyValue(f.label), func() app.UI {
+		app.If(!utils.IsEmptyValue(f.label), func() app.UI {
 			return NewInputLabel(f.label, f.id).LabelClass("form-check-label mx-2")
 		}),
 	)
@@ -112,7 +112,7 @@ func (f *CheckboxField[T]) onInput(ctx app.Context, e app.Event) {
 		value = "false"
 	}
 
-	newValue := tools.StringToValue[T](value)
+	newValue := utils.StringToValue[T](value)
 
 	if f.Vals != nil {
 		needToAdd := true
@@ -140,7 +140,7 @@ func (f *CheckboxField[T]) isChecked() bool {
 		return slices.Contains(*f.Vals, *f.Val)
 	}
 
-	return !tools.IsEmpty(f.Val)
+	return !utils.IsEmpty(f.Val)
 }
 
 func (sf *CheckboxField[T]) deselect(i int) {

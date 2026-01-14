@@ -3,7 +3,7 @@ package components
 import (
 	"accounter/internal/domain/task"
 	"accounter/internal/infrastructure/ui/wasm-goap/common"
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"fmt"
 	"time"
 
@@ -92,7 +92,7 @@ func (tl *TaskList) Render() app.UI {
 				Tooltip("export").
 				Disabled(tl.Tasks.Empty()).
 				OnClick(func(ctx app.Context, e app.Event) {
-					tl.onExport(ctx, tools.FileFormatHTML)
+					tl.onExport(ctx, utils.FileFormatHTML)
 				}),
 		)
 	table := app.Span().
@@ -170,7 +170,7 @@ func (tl *TaskList) onDelete(ctx app.Context, t task.Task) {
 	}
 }
 
-func (tl *TaskList) onExport(ctx app.Context, format tools.FileFormat) {
+func (tl *TaskList) onExport(ctx app.Context, format utils.FileFormat) {
 	api := tl.Ctx.Store.ExportTasks(format)
 	ctx.Navigate(api)
 }
@@ -192,7 +192,7 @@ func (tl *TaskList) getSummary() app.UI {
 		app.Td().Text(cnt).Attr("align", "center").Class("text-bold"),
 		app.Td(), app.Td(), app.Td(), app.Td(), app.Td(), app.Td(),
 		app.Td(),
-		app.Td().Text(tools.FormatDuration(dur, false)).Class("text-bold"),
+		app.Td().Text(utils.FormatDuration(dur, false)).Class("text-bold"),
 		app.Td().Text(fmt.Sprintf("%.2f", price)).Class("text-bold"),
 	)
 }

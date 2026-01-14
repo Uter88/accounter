@@ -4,7 +4,7 @@ import (
 	"accounter/internal/domain/user"
 	"accounter/internal/infrastructure/ui/wasm-goap/common"
 	"accounter/internal/infrastructure/ui/wasm-goap/models"
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"errors"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -96,7 +96,7 @@ func (uf *UserForm) El() app.UI {
 				Required(true).
 				PrependIcon("alternate_email").
 				Validator(func(ctx app.Context, s string) error {
-					if err := tools.ValidEmail(s); err != nil {
+					if err := utils.ValidEmail(s); err != nil {
 						return err
 					}
 

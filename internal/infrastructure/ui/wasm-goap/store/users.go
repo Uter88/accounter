@@ -2,7 +2,7 @@ package store
 
 import (
 	"accounter/internal/domain/user"
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"fmt"
 	"net/http"
 )
@@ -20,7 +20,7 @@ func (s *usersStore) SaveUser(u user.User) (user.User, error) {
 	resp, errResp, err := newRequest[user.User](*s.baseStore).
 		Path("users/save").
 		Method(http.MethodPost).
-		Data(tools.ToJSON(u)).
+		Data(utils.ToJSON(u)).
 		Do()
 
 	if err != nil {
