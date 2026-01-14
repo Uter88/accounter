@@ -1,7 +1,7 @@
 package event
 
 import (
-	"accounter/internal/domain/shared"
+	"accounter/internal/domain/common"
 	"context"
 )
 
@@ -22,7 +22,7 @@ func NewEventService(repo eventRepository, comparator comporator) *EventService 
 }
 
 // OnCreate trigger for creating events
-func (es *EventService) OnCreate(ctx context.Context, userID int64, obj shared.Entity) error {
+func (es *EventService) OnCreate(ctx context.Context, userID int64, obj common.Entity) error {
 	objID := obj.GetID()
 	objType := obj.GetType()
 
@@ -32,7 +32,7 @@ func (es *EventService) OnCreate(ctx context.Context, userID int64, obj shared.E
 }
 
 // OnUpdate trigger for updating events
-func (es *EventService) OnUpdate(ctx context.Context, userID int64, old, new shared.Entity) error {
+func (es *EventService) OnUpdate(ctx context.Context, userID int64, old, new common.Entity) error {
 	objID := new.GetID()
 	objType := new.GetType()
 	updates, _ := es.comparator.Compare(old, new)
@@ -43,7 +43,7 @@ func (es *EventService) OnUpdate(ctx context.Context, userID int64, old, new sha
 }
 
 // OnDelete trigger for deleting events
-func (es *EventService) OnDelete(ctx context.Context, userID int64, obj shared.Entity) error {
+func (es *EventService) OnDelete(ctx context.Context, userID int64, obj common.Entity) error {
 	objID := obj.GetID()
 	objType := obj.GetType()
 

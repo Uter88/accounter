@@ -3,7 +3,7 @@ package components
 import (
 	"accounter/internal/domain/task"
 	"accounter/internal/infrastructure/ui/wasm-goap/models"
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -146,7 +146,7 @@ func (t *TasksChart) makeLineSeries(tasks task.Tasks) *models.ChartOptions {
 			case "money":
 				value = int(item.Value.GetPrice())
 			case "time":
-				value = tools.ToFixed(item.Value.GetDuration().Hours(), 1)
+				value = utils.ToFixed(item.Value.GetDuration().Hours(), 1)
 			}
 
 			s.Data = append(s.Data, models.Array{item.Key * 1000, value})
@@ -183,7 +183,7 @@ func (t *TasksChart) makeBarSeries(tasks task.Tasks) *models.ChartOptions {
 		case "money":
 			value = item.Value.GetPrice()
 		case "time":
-			value = tools.ToFixed(item.Value.GetDuration().Hours(), 1)
+			value = utils.ToFixed(item.Value.GetDuration().Hours(), 1)
 		}
 
 		series.Data = append(series.Data, value)

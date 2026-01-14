@@ -2,7 +2,7 @@ package renderers
 
 import (
 	"accounter/internal/domain/task"
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
@@ -53,10 +53,10 @@ func tasksToExportData(tasks task.Tasks) (d exportData) {
 		d.Rows = append(d.Rows, row)
 	}
 
-	d.TotalPrice = tools.ToFixed(d.TotalPrice, 2)
+	d.TotalPrice = utils.ToFixed(d.TotalPrice, 2)
 
 	if l := float32(len(d.Rows)); l > 0 {
-		d.PricePerHour = tools.ToFixed(d.PricePerHour/l, 2)
+		d.PricePerHour = utils.ToFixed(d.PricePerHour/l, 2)
 	}
 
 	return
@@ -65,7 +65,7 @@ func tasksToExportData(tasks task.Tasks) (d exportData) {
 // NewTaskRenderer creates new taskRenderer
 func NewTaskRenderer() *taskRenderer {
 	renderer := &taskRenderer{
-		renderers: make(map[tools.FileFormat]renderer),
+		renderers: make(map[utils.FileFormat]renderer),
 	}
 
 	return renderer.registerDefaultFormats()
@@ -73,7 +73,7 @@ func NewTaskRenderer() *taskRenderer {
 
 // Renderer of Task
 type taskRenderer struct {
-	renderers map[tools.FileFormat]renderer
+	renderers map[utils.FileFormat]renderer
 }
 
 // data renderer
@@ -81,31 +81,31 @@ type renderer = func(data exportData) (*bytes.Buffer, error)
 
 // registerDefaultFormats register supported formats for rendering Task
 func (tr *taskRenderer) registerDefaultFormats() *taskRenderer {
-	tr.RegisterFormat(tools.FileFormatCSV, tr.toCSV)
-	tr.RegisterFormat(tools.FileFormatDocX, tr.toDOCX)
-	tr.RegisterFormat(tools.FileFormatXLSX, tr.toXLSX)
-	tr.RegisterFormat(tools.FileFormatPDF, tr.toPDF)
-	tr.RegisterFormat(tools.FileFormatJSON, tr.toJSON)
-	tr.RegisterFormat(tools.FileFormatHTML, tr.toHTML)
-	tr.RegisterFormat(tools.FileFormatXML, tr.toXML)
+	tr.RegisterFormat(utils.FileFormatCSV, tr.toCSV)
+	tr.RegisterFormat(utils.FileFormatDocX, tr.toDOCX)
+	tr.RegisterFormat(utils.FileFormatXLSX, tr.toXLSX)
+	tr.RegisterFormat(utils.FileFormatPDF, tr.toPDF)
+	tr.RegisterFormat(utils.FileFormatJSON, tr.toJSON)
+	tr.RegisterFormat(utils.FileFormatHTML, tr.toHTML)
+	tr.RegisterFormat(utils.FileFormatXML, tr.toXML)
 
 	return tr
 }
 
 // RegisterFormat register new render format
-func (tr *taskRenderer) RegisterFormat(format tools.FileFormat, renderer renderer) {
+func (tr *taskRenderer) RegisterFormat(format utils.FileFormat, renderer renderer) {
 	tr.renderers[format] = renderer
 }
 
 // Render Tasks to specified format
-func (tr *taskRenderer) Render(format tools.FileFormat, tasks task.Tasks) (*bytes.Buffer, error) {
+func (tr *taskRenderer) Render(format utils.FileFormat, tasks task.Tasks) (*bytes.Buffer, error) {
 	data := tasksToExportData(tasks)
 
 	if renderer, ok := tr.renderers[format]; ok {
 		return renderer(data)
 	}
 
-	return nil, fmt.Errorf("%w: want: %s, have: %s", ErrUnsupportedFormat, tools.MapKeys(tr.renderers), format)
+	return nil, fmt.Errorf("%w: want: %s, have: %s", ErrUnsupportedFormat, utils.MapKeys(tr.renderers), format)
 
 }
 

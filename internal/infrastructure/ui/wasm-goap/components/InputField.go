@@ -1,7 +1,7 @@
 package components
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"errors"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -55,7 +55,7 @@ func (i *InputField[T]) OnMount(ctx app.Context) {
 }
 
 func (f *InputField[T]) Render() app.UI {
-	if !tools.IsEmpty(*f.Val) {
+	if !utils.IsEmpty(*f.Val) {
 		f.loaded = true
 	}
 
@@ -84,20 +84,20 @@ func (f *InputField[T]) Render() app.UI {
 			ReadOnly(f.readonly)
 
 		if f.tp == "number" {
-			if !tools.IsEmpty(f.step) {
+			if !utils.IsEmpty(f.step) {
 				input.Step(f.step)
 			}
 
-			if !tools.IsEmpty(f.min) {
+			if !utils.IsEmpty(f.min) {
 				input.Min(f.min)
 			}
 
-			if !tools.IsEmpty(f.max) {
+			if !utils.IsEmpty(f.max) {
 				input.Max(f.max)
 			}
 		}
 
-		if !tools.IsEmpty(f.pattern) {
+		if !utils.IsEmpty(f.pattern) {
 			input.Pattern(f.pattern)
 		}
 
@@ -121,7 +121,7 @@ func (f *InputField[T]) onInput(ctx app.Context, e app.Event) {
 	if !f.loaded {
 		f.loaded = true
 	} else if f.required {
-		if tools.IsEmpty(f.Val) {
+		if utils.IsEmpty(f.Val) {
 			f.err = errors.New("required field")
 		}
 	}
@@ -245,7 +245,7 @@ func (f *InputField[T]) render(input app.UI) app.UI {
 		PrependIcon(f.prependIcon).
 		OnClear(f.clear).
 		Required(f.required).
-		Clearable(f.clearable && !tools.IsEmpty(f.Val)).
+		Clearable(f.clearable && !utils.IsEmpty(f.Val)).
 		Wrap(input)
 }
 

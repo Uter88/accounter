@@ -4,7 +4,7 @@ import (
 	"accounter/internal/infrastructure/ui/wasm-goap/common"
 	"accounter/internal/infrastructure/ui/wasm-goap/components"
 	"accounter/internal/infrastructure/ui/wasm-goap/models"
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -68,9 +68,9 @@ func (i *loginPage) El() app.UI {
 								Clearable(true).
 								Required(true).
 								PrependIcon("alternate_email").
-								Formater(tools.ClearEmail).
+								Formater(utils.ClearEmail).
 								Validator(func(ctx app.Context, s string) error {
-									return tools.ValidEmail(s)
+									return utils.ValidEmail(s)
 								}).
 								ID("login-field"),
 

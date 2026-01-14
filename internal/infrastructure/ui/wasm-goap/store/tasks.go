@@ -1,9 +1,9 @@
 package store
 
 import (
-	"accounter/internal/domain/shared"
+	"accounter/internal/domain/common"
 	"accounter/internal/domain/task"
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"fmt"
 	"net/http"
 
@@ -42,7 +42,7 @@ func (s *tasksStore) SaveTask(ctx app.Context, t task.Task) (task.Task, error) {
 	resp, errResp, err := newRequest[task.Task](*s.baseStore).
 		Path("tasks/save").
 		Method(http.MethodPost).
-		Data(tools.ToJSON(t)).
+		Data(utils.ToJSON(t)).
 		Do()
 
 	if err != nil {
@@ -67,7 +67,7 @@ func (s *tasksStore) RemoveTask(ctx app.Context, t task.Task) error {
 	return s.RequestTasks(ctx)
 }
 
-func (s *tasksStore) ExportTasks(format tools.FileFormat) string {
+func (s *tasksStore) ExportTasks(format utils.FileFormat) string {
 	request := newRequest[string](*s.baseStore).
 		Path(fmt.Sprintf("tasks/export/%s", format)).
 		Params(s.params.Encode()).
@@ -84,7 +84,7 @@ func (s *tasksStore) GetTasks() task.Tasks {
 func (s *tasksStore) SetTaskParams(p *task.TaskParams) {
 	s.params = p
 
-	s.ws.SendMessage(shared.WsMessageParams, p)
+	s.ws.SendMessage(common.WsMessageParams, p)
 }
 
 func (s *tasksStore) GetTaskParams() *task.TaskParams {

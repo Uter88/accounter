@@ -1,7 +1,7 @@
 package components
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"time"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
@@ -117,7 +117,7 @@ func (c *Calendar) Render() app.UI {
 		Required(c.required).
 		Label(c.label).
 		PrependIcon(c.prependIcon).
-		Clearable(c.clearable && !tools.IsEmpty(c.Val)).
+		Clearable(c.clearable && !utils.IsEmpty(c.Val)).
 		Wrap(c.makeInputs()...)
 }
 

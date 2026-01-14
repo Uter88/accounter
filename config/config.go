@@ -1,7 +1,7 @@
 package config
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 	"context"
 	_ "embed"
 	"flag"
@@ -117,43 +117,43 @@ func InitConfig() (cfg Config) {
 
 // parseEnv parse environment params
 func (c *Config) parseEnv() {
-	if port, ok := tools.GetEnv[uint]("server-port"); ok {
+	if port, ok := utils.GetEnv[uint]("server-port"); ok {
 		c.HTTP.Port = port
 	}
 
-	if port, ok := tools.GetEnv[uint]("client-port"); ok {
+	if port, ok := utils.GetEnv[uint]("client-port"); ok {
 		c.Client.Port = port
 	}
 
-	if user, ok := tools.GetEnv[string]("dbuser"); ok {
+	if user, ok := utils.GetEnv[string]("dbuser"); ok {
 		c.DB.User = user
 	}
 
-	if password, ok := tools.GetEnv[string]("dbpassword"); ok {
+	if password, ok := utils.GetEnv[string]("dbpassword"); ok {
 		c.DB.Password = password
 	}
 
-	if host, ok := tools.GetEnv[string]("dbhost"); ok {
+	if host, ok := utils.GetEnv[string]("dbhost"); ok {
 		c.DB.Host = host
 	}
 
-	if port, ok := tools.GetEnv[int]("dbport"); ok {
+	if port, ok := utils.GetEnv[int]("dbport"); ok {
 		c.DB.Port = port
 	}
 
-	if dbName, ok := tools.GetEnv[string]("dbname"); ok {
+	if dbName, ok := utils.GetEnv[string]("dbname"); ok {
 		c.DB.DbName = dbName
 	}
 
-	if brokers, ok := tools.GetEnv[string]("qbrokers"); ok {
+	if brokers, ok := utils.GetEnv[string]("qbrokers"); ok {
 		c.Kafka.Brokers = strings.Split(brokers, ",")
 	}
 
-	if topic, ok := tools.GetEnv[string]("qtopic"); ok {
+	if topic, ok := utils.GetEnv[string]("qtopic"); ok {
 		c.Kafka.Topic = topic
 	}
 
-	if group, ok := tools.GetEnv[string]("qgroup"); ok {
+	if group, ok := utils.GetEnv[string]("qgroup"); ok {
 		c.Kafka.Group = group
 	}
 }

@@ -2,7 +2,7 @@ package models
 
 import (
 	"accounter/config"
-	"accounter/internal/domain/shared"
+	"accounter/internal/domain/common"
 	"accounter/pkg/logger"
 	"encoding/json"
 	"errors"
@@ -37,7 +37,7 @@ func (w *WebsocketClient) Connect(token string) {
 
 	w.conn.Set("onopen", app.FuncOf(func(this app.Value, args []app.Value) any {
 		w.logger.Info("Websocket connected")
-		return w.SendMessage(shared.WsMessageAuth, token)
+		return w.SendMessage(common.WsMessageAuth, token)
 	}))
 
 	w.conn.Set("onclose", app.FuncOf(func(this app.Value, args []app.Value) any {
@@ -69,20 +69,20 @@ func (w *WebsocketClient) onMessage(args []app.Value) error {
 	w.logger.Infof("Websocket: new message: %s", msg)
 
 	switch msg.Type {
-	case shared.WsMessageAuth:
+	case common.WsMessageAuth:
 		if msg.Error != "" {
 			return fmt.Errorf("authorization error: %s", msg.Error)
 		}
-	case shared.WsMessagePong:
+	case common.WsMessagePong:
 		w.DoPing()
-	case shared.WsMessagePing:
+	case common.WsMessagePing:
 		w.DoPong()
 	}
 
 	return nil
 }
 
-func (w *WebsocketClient) parseMessage(args []app.Value) (msg shared.WebsocketMessage, err error) {
+func (w *WebsocketClient) parseMessage(args []app.Value) (msg common.WebsocketMessage, err error) {
 	if len(args) == 0 {
 		err = errors.New("empty message")
 		return
@@ -101,21 +101,21 @@ func (w *WebsocketClient) parseMessage(args []app.Value) (msg shared.WebsocketMe
 
 func (w *WebsocketClient) DoPing() {
 	time.AfterFunc(w.pingInterval, func() {
-		w.SendMessage(shared.WsMessagePing, nil)
+		w.SendMessage(common.WsMessagePing, nil)
 	})
 }
 
 func (w *WebsocketClient) DoPong() {
-	w.SendMessage(shared.WsMessagePong, nil)
+	w.SendMessage(common.WsMessagePong, nil)
 }
 
-func (w *WebsocketClient) SendMessage(msgType shared.WsMessageType, payload any) any {
+func (w *WebsocketClient) SendMessage(msgType common.WsMessageType, payload any) any {
 	if w.conn == nil {
 		w.logger.Warn("Websocket connection is nil")
 		return nil
 	}
 
-	msg := shared.WebsocketMessage{
+	msg := common.WebsocketMessage{
 		Type:    msgType,
 		Payload: payload,
 	}

@@ -1,7 +1,7 @@
 package components
 
 import (
-	"accounter/pkg/tools"
+	"accounter/pkg/utils"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -50,7 +50,7 @@ func (i *Icon) El() app.HTMLSpan {
 		Text(i.name)
 
 	return app.Span().Body(
-		app.If(!tools.IsEmpty(i.tooltip), func() app.UI {
+		app.If(!utils.IsEmpty(i.tooltip), func() app.UI {
 			return NewTooltip().Text(i.tooltip).AlignClass(i.alignTooltip).El(icon)
 		}).Else(func() app.UI {
 			return icon
