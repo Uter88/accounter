@@ -1,8 +1,8 @@
 package store
 
 import (
-	"accounter/internal/domain/common"
 	"accounter/internal/domain/task"
+	"accounter/internal/infrastructure/common"
 	"accounter/pkg/utils"
 	"fmt"
 	"net/http"

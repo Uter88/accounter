@@ -4,13 +4,14 @@ import (
 	"accounter/internal/domain/task"
 	"accounter/pkg/utils"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (e *v1Engine) getTasksList(c *gin.Context) {
 	user := e.getCurrentUser(c)
-	params := task.NewTaskParams()
+	params := task.NewTaskParams(time.Now())
 
 	if err := c.ShouldBind(params); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
@@ -58,7 +59,7 @@ func (e *v1Engine) deleteTask(c *gin.Context) {
 func (e *v1Engine) exportTasks(c *gin.Context) {
 	user := e.getCurrentUser(c)
 	format := utils.FileFormat(c.Param("format"))
-	params := task.NewTaskParams()
+	params := task.NewTaskParams(time.Now())
 
 	if err := c.ShouldBind(params); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)

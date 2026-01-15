@@ -2,10 +2,10 @@ package v1
 
 import (
 	"accounter/config"
-	"accounter/internal/domain/common"
 	"accounter/internal/domain/event"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
+	"accounter/internal/infrastructure/common"
 	"accounter/pkg/logger"
 	"accounter/pkg/utils"
 	"bytes"

@@ -42,6 +42,14 @@ func (p *Params) Set(key string, value any) *Params {
 	return p
 }
 
+func (p *Params) Get(key string) string {
+	if vals := p.values[key]; len(vals) > 0 {
+		return strings.Join(vals, ",")
+	}
+
+	return p.values.Get(key)
+}
+
 func (p *Params) Encode() string {
 	if len(p.values) == 0 {
 		return ""

@@ -3,6 +3,7 @@ package components
 import (
 	"accounter/internal/domain/task"
 	"accounter/internal/infrastructure/ui/wasm-goap/common"
+	"time"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -18,7 +19,7 @@ type TaskForm struct {
 func NewTaskForm(ctx common.AppContext) *TaskForm {
 	return &TaskForm{
 		BaseComponent: common.NewBaseComponent(ctx),
-		data:          task.NewTask(),
+		data:          task.NewTask(time.Now()),
 	}
 }
 
@@ -31,7 +32,7 @@ func (uf *TaskForm) OnMount(ctx app.Context) {
 	})
 
 	ctx.Handle("resetTask", func(ctx app.Context, a app.Action) {
-		uf.data = task.NewTask()
+		uf.data = task.NewTask(time.Now())
 		uf.Hide()
 	})
 }

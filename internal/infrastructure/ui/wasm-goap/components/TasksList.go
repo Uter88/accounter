@@ -141,10 +141,11 @@ func (tl *TaskList) onRequest(ctx app.Context) {
 
 func (tl *TaskList) onEdit(ctx app.Context, t *task.Task) {
 	if t == nil {
-		nt := task.NewTask()
-		t = &nt
 		params := tl.Ctx.Store.GetTaskParams()
 		tasks := tl.Ctx.Store.GetTasks()
+
+		nt := task.NewTask(time.Unix(params.DateStart, 0))
+		t = &nt
 
 		t.SetDate(params.DateStart)
 

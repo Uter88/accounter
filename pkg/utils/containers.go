@@ -39,6 +39,14 @@ func NewOrderedMap[K cmp.Ordered, V any]() *OrderedMap[K, V] {
 	}
 }
 
+func (om *OrderedMap[K, V]) Len() int {
+	return len(om.items)
+}
+
+func (om *OrderedMap[K, V]) Keys() []K {
+	return om.keys
+}
+
 func (om *OrderedMap[K, V]) Items() []orderMapItem[K, V] {
 	result := make([]orderMapItem[K, V], len(om.keys))
 
