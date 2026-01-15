@@ -15,6 +15,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
+      secret-key: 48716746efd74c80b72175f17e40224f
       server-port: 8001
       client-port: 8000
       dbhost: postgres
@@ -73,7 +74,7 @@ services:
     networks:
       - app_network
   kafka:
-    attach: true
+    attach: false
     image: confluentinc/cp-kafka:7.4.0
     container_name: kafka
     depends_on:

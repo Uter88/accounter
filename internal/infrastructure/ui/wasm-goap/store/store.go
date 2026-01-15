@@ -2,14 +2,15 @@ package store
 
 import (
 	"accounter/config"
-	"accounter/internal/domain/common"
 	"accounter/internal/domain/task"
 	"accounter/internal/domain/user"
+	"accounter/internal/infrastructure/common"
 	"accounter/internal/infrastructure/ui/wasm-goap/models"
 	"accounter/pkg/utils"
 	"encoding/base64"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
@@ -107,7 +108,7 @@ func NewStore(cfg config.Config, ws *models.WebsocketClient) *Store {
 		ws:  ws,
 	}
 
-	params := task.NewTaskParams()
+	params := task.NewTaskParams(time.Now())
 
 	s := &Store{
 		baseStore:  base,

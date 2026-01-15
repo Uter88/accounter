@@ -20,9 +20,7 @@ type TaskParams struct {
 }
 
 // NewTaskParams creates new TaskParams
-func NewTaskParams() TaskParams {
-	n := time.Now()
-
+func NewTaskParams(n time.Time) TaskParams {
 	return TaskParams{
 		Timezone:  time.Local.String(),
 		DateStart: time.Date(n.Year(), n.Month(), n.Day(), 0, 0, 0, 0, n.Location()).Unix(),

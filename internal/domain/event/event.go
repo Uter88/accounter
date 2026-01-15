@@ -19,21 +19,21 @@ type Events []Event
 
 // Event for domain operations
 type Event struct {
-	ID         int64               `json:"id"`
-	UserID     int64               `json:"user_id"`
-	ObjectID   int64               `json:"object_id"`
-	ObjectType string              `json:"object_type"`
-	Date       time.Time           `json:"date"`
-	Type       EventType           `json:"type"`
-	Path       string              `json:"path"`
-	Updates    []EventUpdateRecord `json:"updates"`
+	ID         int64
+	UserID     int64
+	ObjectID   int64
+	ObjectType string
+	Date       time.Time
+	Type       EventType
+	Path       string
+	Updates    []EventUpdateRecord
 }
 
 // EventUpdateRecord record with update field information
 type EventUpdateRecord struct {
-	Field    string `json:"field"`
-	OldValue any    `json:"old_value"`
-	NewValue any    `json:"new_value"`
+	Field    string
+	OldValue any
+	NewValue any
 }
 
 // NewEvent creates new Event

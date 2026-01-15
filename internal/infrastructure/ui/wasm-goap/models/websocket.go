@@ -2,7 +2,7 @@ package models
 
 import (
 	"accounter/config"
-	"accounter/internal/domain/common"
+	"accounter/internal/infrastructure/common"
 	"accounter/pkg/logger"
 	"encoding/json"
 	"errors"

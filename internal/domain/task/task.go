@@ -6,6 +6,19 @@ import (
 	"time"
 )
 
+// Fields for detect differences on update Event
+var ComparationFields = [...]string{
+	"UserID", "TaskID", "Status", "Description", "WorkBegin", "WorkEnd", "Date",
+}
+
+// TaskStatus Task status
+type TaskStatus = string
+
+const (
+	TaskStatusInProgress TaskStatus = "in_progress"
+	TaskStatusCompleted  TaskStatus = "completed"
+)
+
 // Task slice model
 type Tasks []Task
 
@@ -60,43 +73,35 @@ func (tasks Tasks) GroupByDates() *utils.OrderedMap[int64, Tasks] {
 	return result
 }
 
-// Fields for detect differences on update Event
-var ComparationFields = [...]string{
-	"UserID", "TaskID", "Status", "Description", "WorkBegin", "WorkEnd", "Date",
-}
-
 // Task entity
 type Task struct {
-	ID           int64   `db:"id,omitempty" json:"id,omitempty"`
-	UserID       int64   `db:"user_id" json:"user_id"`
-	UserLabel    string  `db:"user_label" json:"user_label"`
-	PricePerHour float32 `db:"price_per_hour" json:"price_per_hour"`
-	TaskID       string  `db:"task_id" json:"task_id"`
-	Status       string  `db:"status" json:"status"`
-	Description  string  `db:"description" json:"description"`
-	WorkBegin    int64   `db:"work_begin" json:"work_begin"`
-	WorkEnd      int64   `db:"work_end" json:"work_end"`
-	Date         int64   `db:"date" json:"date"`
+	ID           int64      `db:"id,omitempty" json:"id,omitempty"`
+	UserID       int64      `db:"user_id" json:"user_id"`
+	UserLabel    string     `db:"user_label" json:"user_label"`
+	PricePerHour float32    `db:"price_per_hour" json:"price_per_hour"`
+	TaskID       string     `db:"task_id" json:"task_id"`
+	Status       TaskStatus `db:"status" json:"status"`
+	Description  string     `db:"description" json:"description"`
+	WorkBegin    int64      `db:"work_begin" json:"work_begin"`
+	WorkEnd      int64      `db:"work_end" json:"work_end"`
+	Date         int64      `db:"date" json:"date"`
 }
 
 // NewTask creates new Task
-func NewTask() Task {
-	now := time.Now()
-
+func NewTask(dt time.Time) Task {
 	return Task{
-		Status:    "completed",
-		WorkBegin: time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, now.Location()).Unix(),
-		WorkEnd:   time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, now.Location()).Unix(),
-		Date:      now.Unix(),
+		Status:    TaskStatusCompleted,
+		WorkBegin: time.Date(dt.Year(), dt.Month(), dt.Day(), 8, 0, 0, 0, dt.Location()).Unix(),
+		WorkEnd:   time.Date(dt.Year(), dt.Month(), dt.Day(), 18, 0, 0, 0, dt.Location()).Unix(),
+		Date:      dt.Unix(),
 	}
 }
 
 // SetDate set Task date, begin and end of work
-func (t *Task) SetDate(dt int64) *Task {
+func (t *Task) SetDate(dt int64) {
 	t.Date = dt
 	t.WorkBegin = utils.SetDateTs(dt, t.WorkBegin)
 	t.WorkEnd = utils.SetDateTs(dt, t.WorkEnd)
-	return t
 }
 
 // IsValid Task complete validation
@@ -106,6 +111,10 @@ func (t Task) IsValid() bool {
 	}
 
 	if utils.IsSomeEmpty(t.Description, t.Status) {
+		return false
+	}
+
+	if time.Unix(t.WorkEnd, 0).Before(time.Unix(t.WorkBegin, 0)) {
 		return false
 	}
 

@@ -13,8 +13,9 @@ import (
 
 // KafkaBroker Kafka queue broker
 type KafkaBroker struct {
-	ctx    context.Context
-	logger logger.Logger
+	ctx        context.Context
+	logger     logger.Logger
+	autoCommit bool
 
 	reader *kafka.Reader
 	writer *kafka.Writer
@@ -28,10 +29,11 @@ type KafkaBroker struct {
 // NewBroker creates new KafkaBroker
 func NewBroker(ctx context.Context, config config.Config, logger logger.Logger) *KafkaBroker {
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  config.Kafka.Brokers,
-		Topic:    config.Kafka.Topic,
-		MaxBytes: 10e6,
-		GroupID:  config.Kafka.Group,
+		Brokers:     config.Kafka.Brokers,
+		Topic:       config.Kafka.Topic,
+		MaxBytes:    10e6,
+		GroupID:     config.Kafka.Group,
+		StartOffset: kafka.LastOffset,
 	})
 
 	writer := kafka.NewWriter(kafka.WriterConfig{
@@ -45,6 +47,7 @@ func NewBroker(ctx context.Context, config config.Config, logger logger.Logger) 
 		writer:       writer,
 		readTimeout:  config.Kafka.ReadTimeout,
 		writeTimeout: config.Kafka.WriteTimeout,
+		autoCommit:   config.Kafka.AutoCommit,
 		logger:       logger,
 		subscribers:  make([]event.EventSubscriber, 0),
 	}

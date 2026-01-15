@@ -27,8 +27,8 @@ type Config struct {
 	AppMode string
 
 	// JWT secret key salt
-	SecretKey   string        `yaml:"secret_key"`
-	TokenExpire time.Duration `yaml:"token_expire"`
+	SecretKey   string        `yaml:"secret_key,omitempty"`
+	TokenExpire time.Duration `yaml:"token_expire,omitempty"`
 
 	// Frontend config
 	Client struct {
@@ -42,53 +42,56 @@ type Config struct {
 	DB DBConfig `yaml:"db"`
 
 	Kafka struct {
-		Brokers      []string      `yaml:"brokers"`
-		Topic        string        `yaml:"topic"`
-		Group        string        `yaml:"group"`
-		ReadTimeout  time.Duration `yaml:"read_timeout"`
-		WriteTimeout time.Duration `yaml:"write_timeout"`
+		Brokers      []string      `yaml:"brokers,omitempty"`
+		Topic        string        `yaml:"topic,omitempty"`
+		Group        string        `yaml:"group,omitempty"`
+		ReadTimeout  time.Duration `yaml:"read_timeout,omitempty"`
+		WriteTimeout time.Duration `yaml:"write_timeout,omitempty"`
+		AutoCommit   bool          `yaml:"auto_commit,omitempty"`
 	} `yaml:"kafka"`
 }
 
 type DBConfig struct {
-	Driver   string `yaml:"driver"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	DbName   string `yaml:"dbname"`
-	SSLMode  string `yaml:"ssl_mode"`
+	Driver   string `yaml:"driver,omitempty"`
+	User     string `yaml:"user,omitempty"`
+	Password string `yaml:"password,omitempty"`
+	Host     string `yaml:"host,omitempty"`
+	Port     int    `yaml:"port,omitempty"`
+	DbName   string `yaml:"dbname,omitempty"`
+	SSLMode  string `yaml:"ssl_mode,omitempty"`
 
 	DSN string `yaml:"dsn"`
 }
 
 // HTTP server config
 type HTTPConfig struct {
-	Host             string          `yaml:"host"`
-	Port             uint            `yaml:"port"`
-	AllowOrigins     []string        `yaml:"allow_origins"`
-	AllowHeaders     []string        `yaml:"allow_headers"`
-	AllowMethods     []string        `yaml:"allow_methods"`
-	AllowWildcard    bool            `yaml:"allow_wildcard"`
-	AllowCredentials bool            `yaml:"allow_credentials"`
-	ExposeHeaders    []string        `yaml:"expose_headers"`
-	MaxAge           time.Duration   `yaml:"max_age"`
-	ReadTimeout      time.Duration   `yaml:"read_timeout"`
-	WriteTimeout     time.Duration   `yaml:"write_timeout"`
+	Host             string          `yaml:"host,omitempty"`
+	Port             uint            `yaml:"port,omitempty"`
+	AllowOrigins     []string        `yaml:"allow_origins,omitempty"`
+	AllowHeaders     []string        `yaml:"allow_headers,omitempty"`
+	AllowMethods     []string        `yaml:"allow_methods,omitempty"`
+	AllowWildcard    bool            `yaml:"allow_wildcard,omitempty"`
+	AllowCredentials bool            `yaml:"allow_credentials,omitempty"`
+	ExposeHeaders    []string        `yaml:"expose_headers,omitempty"`
+	MaxAge           time.Duration   `yaml:"max_age,omitempty"`
+	ReadTimeout      time.Duration   `yaml:"read_timeout,omitempty"`
+	WriteTimeout     time.Duration   `yaml:"write_timeout,omitempty"`
 	Websocket        WebsocketConfig `yaml:"websocket"`
 }
 
 // Websocket config
 type WebsocketConfig struct {
-	URL                  string        `yaml:"url"`
-	ReadDeadline         time.Duration `yaml:"read_deadline"`
-	WriteDeadline        time.Duration `yaml:"write_deadline"`
-	ReconnectionInterval time.Duration `yaml:"reconnection_interval"`
-	PingInterval         time.Duration `yaml:"ping_interval"`
+	URL                  string        `yaml:"url,omitempty"`
+	ReadDeadline         time.Duration `yaml:"read_deadline,omitempty"`
+	WriteDeadline        time.Duration `yaml:"write_deadline,omitempty"`
+	ReconnectionInterval time.Duration `yaml:"reconnection_interval,omitempty"`
+	PingInterval         time.Duration `yaml:"ping_interval,omitempty"`
 }
 
 // InitConfig parse args and load config from YAML file
-func InitConfig() (cfg Config) {
+func InitConfig() Config {
+	cfg := newDefaultConfig()
+
 	flag.BoolVar(&cfg.DebugMode, "debug", true, "Debug mode")
 	flag.StringVar(&cfg.AppMode, "mode", "dev", "App mode")
 	flag.UintVar(&cfg.HTTP.Port, "backend-port", 8001, "HTTP BACKEND PORT")
@@ -112,11 +115,32 @@ func InitConfig() (cfg Config) {
 	}
 
 	log.Fatalln("Error init config: config not found")
+	return cfg
+}
+
+// newDefaultConfig init default Config
+func newDefaultConfig() (cfg Config) {
+	cfg.DebugMode = true
+	cfg.AppMode = "dev"
+	cfg.HTTP.Port = 8001
+	cfg.Client.Port = 8000
+	cfg.DB.User = "postgres"
+	cfg.DB.Password = ""
+	cfg.DB.Host = "localhost"
+	cfg.DB.Port = 5432
+	cfg.DB.DbName = "main"
+	cfg.Kafka.Brokers = []string{"kafka:9092"}
+	cfg.Kafka.Topic = "accounter"
+	cfg.Kafka.Group = "accounter"
 	return
 }
 
 // parseEnv parse environment params
 func (c *Config) parseEnv() {
+	if key, ok := utils.GetEnv[string]("secret-key"); ok {
+		c.SecretKey = key
+	}
+
 	if port, ok := utils.GetEnv[uint]("server-port"); ok {
 		c.HTTP.Port = port
 	}

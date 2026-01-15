@@ -5,9 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+
+	"github.com/segmentio/kafka-go"
 )
 
-// Run start event queue reader
+// Run start to read Event queuies
 func (r *KafkaBroker) Run(ctx context.Context) error {
 	for {
 		select {
@@ -22,26 +25,36 @@ func (r *KafkaBroker) Run(ctx context.Context) error {
 				continue
 			}
 
-			var event event.Event
+			err = r.sendMessageToSubscribers(msg)
 
-			if err = json.Unmarshal(msg.Value, &event); err != nil {
-				r.logger.Errorf("error read event message: %s", err.Error())
-				continue
-			}
-
-			var errs []error
-
-			for _, subscriber := range r.subscribers {
-				if err = subscriber.SubscribeEvent(event); err != nil {
-					errs = append(errs, err)
-				}
-			}
-
-			if len(errs) == 0 {
+			if err == nil || r.autoCommit {
 				r.reader.CommitMessages(ctx, msg)
 			} else {
-				r.logger.Errorf("error send event to subscriber(s): %s", errors.Join(errs...))
+				r.logger.Errorf("error process message: %s", err)
 			}
 		}
 	}
+}
+
+// sendMessageToSubscribers decode Message to Event and try to send to all Event subscribers
+func (r *KafkaBroker) sendMessageToSubscribers(msg kafka.Message) error {
+	var event event.Event
+
+	if err := json.Unmarshal(msg.Value, &event); err != nil {
+		return fmt.Errorf("fail to unmarshall message to Event: %w", err)
+	}
+
+	var errs []error
+
+	for _, s := range r.subscribers {
+		if err := s.SubscribeEvent(event); err != nil {
+			errs = append(errs, fmt.Errorf("-%s:%w-", s.Name(), err))
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("fail to send Event to subscriber(s): %s", errors.Join(errs...))
+	}
+
+	return nil
 }

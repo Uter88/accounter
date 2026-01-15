@@ -51,5 +51,6 @@ prod: &default
       - localhost:9092
     read_timeout: 10s
     write_timeout: 10s
+    auto_commit: false
 dev: 
   <<: *default

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt/v5"
 )
 
 // Authorization service
@@ -74,7 +74,7 @@ func createTokens(u *user.CurrentUser, cfg config.Config) error {
 // JWT payload
 type JWTPayload struct {
 	UserID int64 `json:"user_id"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 // JWT tokens pair
@@ -85,7 +85,7 @@ type Tokens struct {
 
 // Valid is token expire validation
 func (p JWTPayload) Valid() error {
-	if time.Now().After(time.Unix(p.ExpiresAt, 0)) {
+	if time.Now().After(p.ExpiresAt.Time) {
 		return errors.New("token is expired")
 	}
 
@@ -94,7 +94,7 @@ func (p JWTPayload) Valid() error {
 
 // GenerateToken creates new JWT token
 func (p *JWTPayload) GenerateToken(expire time.Duration, secretKey string) (string, error) {
-	p.ExpiresAt = time.Now().Add(expire).Unix()
+	p.ExpiresAt = jwt.NewNumericDate(time.Now().Add(expire))
 
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, p).SignedString([]byte(secretKey))
 }
