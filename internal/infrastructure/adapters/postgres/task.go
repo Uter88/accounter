@@ -4,6 +4,7 @@ import (
 	"accounter/internal/domain/task"
 	"accounter/pkg/utils"
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 )
@@ -41,6 +42,10 @@ func (r *taskRepository) GetOne(ctx context.Context, id int64) (t task.Task, err
 
 	query := fmt.Sprintf("%s WHERE t.id = $1", getTaskQuery)
 	err = db.GetContext(ctx, &t, query, id)
+
+	if err == sql.ErrNoRows {
+		return t, task.ErrTaskNotFound
+	}
 
 	return
 }

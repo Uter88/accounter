@@ -30,3 +30,8 @@ func (u *CurrentUser) SetToken(access, refresh string) {
 func (u *CurrentUser) SetAuthorized(v bool) {
 	u.IsAuthorized = v
 }
+
+func (u *CurrentUser) WithContext(ctx context.Context) CurrentUser {
+	u.Context = ctx
+	return *u
+}

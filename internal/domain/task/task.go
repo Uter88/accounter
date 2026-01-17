@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const TaskType = "task"
+
 // Fields for detect differences on update Event
 var ComparationFields = [...]string{
 	"UserID", "TaskID", "Status", "Description", "WorkBegin", "WorkEnd", "Date",
@@ -166,5 +168,5 @@ func (t Task) GetID() int64 {
 
 // GetType return type of Task object
 func (t Task) GetType() string {
-	return "task"
+	return TaskType
 }

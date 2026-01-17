@@ -255,5 +255,5 @@ func (suite *testTaskSuite) TestGetIDAndType() {
 	task := suite.sampleTask
 
 	suite.Equal(int64(1), task.GetID())
-	suite.Equal("task", task.GetType())
+	suite.Equal(TaskType, task.GetType())
 }
