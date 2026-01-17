@@ -45,10 +45,7 @@ func (e *v1Engine) deleteTask(c *gin.Context) {
 	if id, err := e.parseID(c); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if task, err := e.taskService.GetTask(user, id); err != nil {
-		e.writeErr(c, http.StatusNotFound, err)
-
-	} else if err = e.taskService.DeleteTask(user, &task); err != nil {
+	} else if err = e.taskService.DeleteTask(user, id); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
 	} else {

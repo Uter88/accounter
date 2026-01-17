@@ -24,12 +24,12 @@ func NewTaskService(repo TaskRepository, renderer TaskRenderer, eventBus TaskEve
 }
 
 // Get Task list
-func (ts *TaskService) GetTaskList(ctx common.Context, params TaskParams) (Tasks, error) {
+func (ts *TaskService) GetTaskList(ctx context.Context, params TaskParams) (Tasks, error) {
 	return ts.repo.GetList(ctx, params)
 }
 
 // GetTask get one Task by id
-func (ts *TaskService) GetTask(ctx common.Context, id int64) (Task, error) {
+func (ts *TaskService) GetTask(ctx context.Context, id int64) (Task, error) {
 	return ts.repo.GetOne(ctx, id)
 }
 
@@ -45,7 +45,7 @@ func (ts *TaskService) SaveTask(ctx common.Context, task *Task) error {
 // updateTask updates exitance Task
 func (ts *TaskService) updateTask(ctx common.Context, task *Task) error {
 	userID := ctx.GetID()
-	oldTask, err := ts.repo.GetOne(ctx, task.ID)
+	oldTask, err := ts.GetTask(ctx, task.ID)
 
 	if err != nil {
 		return err
@@ -53,10 +53,14 @@ func (ts *TaskService) updateTask(ctx common.Context, task *Task) error {
 
 	return ts.repo.WithTx(ctx, func(ctx context.Context) error {
 		if err = ts.repo.Update(ctx, task); err != nil {
-			return err
+			return ErrTaskUpdate.WithErr(err)
 		}
 
-		return ts.eventBus.OnUpdate(ctx, userID, oldTask, *task)
+		if err := ts.eventBus.OnUpdate(ctx, userID, oldTask, *task); err != nil {
+			return ErrLogTask.WithErr(err)
+		}
+
+		return nil
 	})
 }
 
@@ -66,24 +70,34 @@ func (ts *TaskService) createTask(ctx common.Context, task *Task) error {
 
 	return ts.repo.WithTx(ctx, func(ctx context.Context) error {
 		if err := ts.repo.Create(ctx, task); err != nil {
-			return err
+			return ErrTaskCreate.WithErr(err)
 		}
 
-		return ts.eventBus.OnCreate(ctx, userID, task)
+		if err := ts.eventBus.OnCreate(ctx, userID, task); err != nil {
+			return ErrLogTask.WithErr(err)
+		}
+
+		return nil
 	})
 }
 
 // Delete Task
-func (ts *TaskService) DeleteTask(ctx common.Context, task *Task) error {
+func (ts *TaskService) DeleteTask(ctx common.Context, id int64) error {
 	userID := ctx.GetID()
+
+	task, err := ts.GetTask(ctx, id)
+
+	if err != nil {
+		return err
+	}
 
 	return ts.repo.WithTx(ctx, func(ctx context.Context) error {
 		if err := ts.repo.Delete(ctx, task.ID); err != nil {
-			return err
+			return ErrTaskDelete.WithErr(err)
 		}
 
 		if err := ts.eventBus.OnDelete(ctx, userID, task); err != nil {
-			return err
+			return ErrLogTask.WithErr(err)
 		}
 
 		return nil
