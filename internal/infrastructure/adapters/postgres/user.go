@@ -1,9 +1,12 @@
 package postgres
 
 import (
+	"accounter/internal/domain/common"
 	"accounter/internal/domain/user"
 	"accounter/pkg/utils"
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -20,15 +23,12 @@ func NewUserRepository(client *SQLClient) *userRepository {
 }
 
 // GetList get list of User
-func (r *userRepository) GetList(ctx context.Context) (user.Users, error) {
+func (r *userRepository) GetList(ctx context.Context, params common.RequestParams) (user.Users, error) {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
 	result := make(user.Users, 0)
-	query := fmt.Sprintf("%s ORDER BY login", getUserQuery)
-
-	db := r.client.GetExecutor(ctx)
-	err := db.SelectContext(ctx, &result, query)
+	err := r.namedSelect(ctx, getUserListQuery, &result, params)
 
 	return result, err
 }
@@ -40,8 +40,12 @@ func (r *userRepository) GetOne(ctx context.Context, id int64) (u user.User, err
 
 	db := r.client.GetExecutor(ctx)
 
-	query := fmt.Sprintf("%s WHERE id = $1", getUserQuery)
+	query := fmt.Sprintf(getUserQuery, "u.id = $1")
 	err = db.GetContext(ctx, &u, query, id)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		err = user.ErrUserNotFound
+	}
 
 	return
 }
@@ -51,15 +55,23 @@ func (r *userRepository) GetByCredentials(ctx context.Context, login, password s
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
-	cond := "WHERE login = :login"
-
-	if password != "" {
-		cond += " AND password = :password"
+	params := utils.Data{
+		"login":    login,
+		"password": password,
 	}
 
-	query := fmt.Sprintf("%s %s", getUserQuery, cond)
+	cond := "u.login = :login"
 
-	err = r.namedGet(ctx, query, &u, utils.Data{"login": login, "password": password})
+	if password != "" {
+		cond += " AND u.password = :password"
+	}
+
+	query := fmt.Sprintf(getUserQuery, cond)
+	err = r.namedGet(ctx, query, &u, params)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		err = user.ErrUserNotFound
+	}
 
 	return
 }
@@ -106,9 +118,37 @@ func (r *userRepository) Delete(ctx context.Context, id int64) error {
 
 // User queries
 const (
-	getUserQuery = `
-		SELECT id, login, password, name, surname, patronymic, price_per_hour FROM users
+	getUserListQuery = `
+		SELECT
+			u.id,
+			u.login,
+			u.password,
+			u.name,
+			u.surname,
+			u.patronymic,
+			u.price_per_hour,
+			COALESCE((
+				SELECT SUM((CAST(t.work_end-t.work_begin as float) / 3600) * t.price_per_hour)
+				FROM tasks t 
+				WHERE t.user_id = u.id AND t.date BETWEEN :date_start AND :date_end
+			), 0) as money_earned
+		FROM users u
+		GROUP BY u.id
+		ORDER BY u.surname
 	`
+	getUserQuery = `
+		SELECT
+			u.id,
+			u.login,
+			u.password,
+			u.name,
+			u.surname,
+			u.patronymic,
+			u.price_per_hour
+		FROM users u
+		WHERE %s
+	`
+
 	deleteUserQuery = `DELETE FROM users WHERE id = $1`
 	insertUserQuery = `
 		INSERT INTO users (login, password, name, surname, patronymic, price_per_hour)

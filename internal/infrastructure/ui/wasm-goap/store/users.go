@@ -39,6 +39,7 @@ func (s *usersStore) RequestUsers() error {
 
 	resp, errResp, err := newRequest[[]user.User](*s.baseStore).
 		Path("users/list").
+		Params(s.params.Encode()).
 		Do()
 
 	if err != nil {
@@ -92,4 +93,14 @@ func (s *usersStore) setLoading(v bool) {
 
 func (s *usersStore) GetUsersLoading() bool {
 	return s.loading
+}
+
+func (s *usersStore) GetUserByID(id int64) *user.User {
+	for i := range s.users {
+		if s.users[i].ID == id {
+			return &s.users[i]
+		}
+	}
+
+	return nil
 }

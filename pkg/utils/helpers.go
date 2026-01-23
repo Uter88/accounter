@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,14 +10,7 @@ import (
 	"strings"
 )
 
-func ValOrNil(v any) any {
-	if IsEmpty(v) {
-		return nil
-	}
-
-	return v
-}
-
+// IsEmpty checking for value empty
 func IsEmpty(v any) bool {
 	if v == nil {
 		return true
@@ -69,10 +61,12 @@ func IsEmpty(v any) bool {
 	}
 }
 
+// IsEmptyValue cheking for T value is equal empty T value
 func IsEmptyValue[T comparable](val T) bool {
 	return val == *new(T)
 }
 
+// IsSomeEmpty checking for some of slice item is empty
 func IsSomeEmpty[T comparable](vals ...T) bool {
 	for _, val := range vals {
 		if IsEmptyValue(val) {
@@ -83,6 +77,7 @@ func IsSomeEmpty[T comparable](vals ...T) bool {
 	return false
 }
 
+// Stringify join items by comma separator
 func Stringify[T any](items ...T) string {
 	elems := make([]string, len(items))
 
@@ -93,6 +88,7 @@ func Stringify[T any](items ...T) string {
 	return strings.Join(elems, ",")
 }
 
+// StringifyWith join items to string with specified separator
 func StringifyWith[T any](sep string, items ...T) string {
 	elems := make([]string, len(items))
 
@@ -103,11 +99,13 @@ func StringifyWith[T any](sep string, items ...T) string {
 	return strings.Join(elems, sep)
 }
 
-func PtrToValue(v any) any {
-	switch tp := v.(type) {
+// PtrToValue convert pointer value to value
+func PtrToValue[T comparable](v T) any {
+	switch tp := any(v).(type) {
 	case *string:
 		return *tp
-
+	case *uint:
+		return *tp
 	case *int:
 		return *tp
 	case *int64:
@@ -122,18 +120,7 @@ func PtrToValue(v any) any {
 	}
 }
 
-func EmptyValue(v any) any {
-	switch v.(type) {
-	case string:
-		return ""
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
-		return 0
-
-	default:
-		return nil
-	}
-}
-
+// ToJSON encode any item to JSON buffer
 func ToJSON(data any) *bytes.Buffer {
 	buf := bytes.NewBuffer(nil)
 	json.NewEncoder(buf).Encode(data)
@@ -141,25 +128,19 @@ func ToJSON(data any) *bytes.Buffer {
 	return buf
 }
 
+// FromJSON decode any item from JSON bytes
+// IMPORTANT: ignore unmarshalling errors and can be empty
 func FromJSON[T any](data []byte) (result T) {
 	json.Unmarshal(data, &result)
 	return
 }
 
-func IsNotFoundError(err error) bool {
-	switch err {
-	case sql.ErrNoRows:
-		return true
-
-	default:
-		return false
-	}
-}
-
+// PutToValue put value into pointer value
 func PutToValue[T comparable](value string, dest *T) {
 	*dest = StringToValue[T](value)
 }
 
+// StringToValue try to convert string value into T value
 func StringToValue[T comparable](value string) (res T) {
 	val := reflect.ValueOf(&res)
 	val = val.Elem()
@@ -192,6 +173,7 @@ func StringToValue[T comparable](value string) (res T) {
 	return
 }
 
+// FirstNonEmptyValue returns frist non-empty value from slice
 func FirstNonEmptyValue[T any](values ...T) (value T) {
 	for _, val := range values {
 		if !IsEmpty(val) {

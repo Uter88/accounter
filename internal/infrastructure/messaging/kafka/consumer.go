@@ -15,10 +15,14 @@ func (r *KafkaBroker) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil
 
 		default:
 			msg, err := r.reader.FetchMessage(r.ctx)
+
+			if err == context.Canceled {
+				continue
+			}
 
 			if err != nil {
 				r.logger.Errorf("error read event message: %s", err.Error())

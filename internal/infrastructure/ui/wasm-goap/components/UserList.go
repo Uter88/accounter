@@ -58,9 +58,9 @@ func (ul *UserList) Render() app.UI {
 						Value(&u.ID).
 						Values(&ul.selected).
 						OnUpdate(func(ctx app.Context, e app.Event) {
-							params := ul.Ctx.Store.GetTaskParams()
+							params := ul.Ctx.Store.GetRequestParams()
 							params.Users = ul.selected
-							ul.Ctx.Store.SetTaskParams(params)
+							ul.Ctx.Store.SetRequestParams(params)
 							ul.Ctx.Store.RequestTasks(ctx)
 						}),
 
@@ -83,6 +83,7 @@ func (ul *UserList) Render() app.UI {
 			app.Td().Text(u.Surname),
 			app.Td().Text(u.Patronymic),
 			app.Td().Text(u.PricePerHour),
+			app.Td().Text(u.FormatMoneyEarned()),
 		)
 	}
 
@@ -114,7 +115,8 @@ func (ul *UserList) Render() app.UI {
 					app.Th().Text("Name"),
 					app.Th().Text("Surname"),
 					app.Th().Text("Patronymic"),
-					app.Th().Text("Price"),
+					app.Th().Text("PPR"),
+					app.Th().Text("Money earned"),
 				),
 			),
 			app.TBody().Body(rows...),

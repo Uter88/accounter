@@ -4,6 +4,7 @@ import (
 	"accounter/internal/domain/common"
 	"accounter/pkg/utils"
 	"context"
+	"errors"
 )
 
 // User service
@@ -17,8 +18,8 @@ func NewUserService(repo UserRepository) *UserService {
 }
 
 // GetUsersList get list of User
-func (s *UserService) GetUsersList(ctx context.Context) ([]User, error) {
-	return s.repo.GetList(ctx)
+func (s *UserService) GetUsersList(ctx context.Context, params common.RequestParams) ([]User, error) {
+	return s.repo.GetList(ctx, params)
 }
 
 // GetUser get single User by specified id
@@ -35,8 +36,14 @@ func (s *UserService) SaveUser(ctx common.Context, user *User) error {
 	return s.repo.Update(ctx, user)
 }
 
-// DeleteUser delete User
-func (s *UserService) DeleteUser(ctx common.Context, user *User) error {
+// DeleteUser delete User by specified id
+func (s *UserService) DeleteUser(ctx common.Context, id int64) error {
+	user, err := s.GetUser(ctx, id)
+
+	if err != nil {
+		return err
+	}
+
 	return s.repo.Delete(ctx, user.ID)
 }
 
@@ -44,7 +51,7 @@ func (s *UserService) DeleteUser(ctx common.Context, user *User) error {
 func (s *UserService) CheckUniqueLogin(ctx context.Context, login string) (exists bool, err error) {
 	_, err = s.repo.GetByCredentials(ctx, login, "")
 
-	if utils.IsNotFoundError(err) {
+	if errors.Is(err, ErrUserNotFound) {
 		return false, nil
 
 	} else if err == nil {

@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"accounter/internal/domain/common"
 	"accounter/internal/domain/task"
 	"accounter/pkg/utils"
 	"net/http"
@@ -11,9 +12,9 @@ import (
 
 func (e *v1Engine) getTasksList(c *gin.Context) {
 	user := e.getCurrentUser(c)
-	params := task.NewTaskParams(time.Now())
+	params := common.NewRequestParams(time.Now())
 
-	if err := c.ShouldBind(params); err != nil {
+	if err := c.ShouldBind(&params); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
 	} else if result, err := e.taskService.GetTaskList(user, params); err != nil {
@@ -56,9 +57,9 @@ func (e *v1Engine) deleteTask(c *gin.Context) {
 func (e *v1Engine) exportTasks(c *gin.Context) {
 	user := e.getCurrentUser(c)
 	format := utils.FileFormat(c.Param("format"))
-	params := task.NewTaskParams(time.Now())
+	params := common.NewRequestParams(time.Now())
 
-	if err := c.ShouldBind(params); err != nil {
+	if err := c.ShouldBind(&params); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
 	} else if result, err := e.taskService.GetTaskList(user, params); err != nil {

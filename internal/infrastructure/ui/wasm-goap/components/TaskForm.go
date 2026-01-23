@@ -108,7 +108,23 @@ func (tf *TaskForm) makeForm() app.UI {
 				Required(true).
 				Value(&tf.data.UserID).
 				Options(tf.userOptions()).
+				OnUpdate(func(ctx app.Context, e app.Event) {
+					if user := tf.Ctx.Store.GetUserByID(tf.data.UserID); user != nil {
+						tf.data.PricePerHour = user.PricePerHour
+					} else {
+						tf.data.PricePerHour = 0
+					}
+				}).
 				ID("task-user"),
+
+			app.Div().Class("d-flex flex-row px-1 input-group-text mt-2").Body(
+				app.Div().Class("col").Text("Price per hour"),
+				app.Div().Class("col").Text(tf.data.FormatPricePerHour()),
+			),
+			app.Div().Class("d-flex flex-row px-1 input-group-text mt-2").Body(
+				app.Div().Class("col").Text("Price total"),
+				app.Div().Class("col").Text(tf.data.FormatPrice()),
+			),
 		)
 }
 

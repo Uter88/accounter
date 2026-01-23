@@ -1,6 +1,7 @@
 package components
 
 import (
+	"accounter/internal/domain/common"
 	"accounter/internal/domain/task"
 	"accounter/internal/infrastructure/ui/wasm-goap/models"
 	"accounter/pkg/utils"
@@ -12,7 +13,7 @@ type TasksChart struct {
 	app.Compo
 
 	Tasks  task.Tasks
-	Params *task.TaskParams
+	Params *common.RequestParams
 
 	lazy      bool
 	chart     *Chart
@@ -20,7 +21,7 @@ type TasksChart struct {
 	valueType string
 }
 
-func NewTasksChart(tasks task.Tasks, params *task.TaskParams) *TasksChart {
+func NewTasksChart(tasks task.Tasks, params *common.RequestParams) *TasksChart {
 	return &TasksChart{
 		lazy:      true,
 		chartType: models.SeriesBar,

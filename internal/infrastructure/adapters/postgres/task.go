@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"accounter/internal/domain/common"
 	"accounter/internal/domain/task"
 	"accounter/pkg/utils"
 	"context"
@@ -22,7 +23,7 @@ func NewTaskRepository(client *SQLClient) *taskRepository {
 }
 
 // GetList get list of Task
-func (r *taskRepository) GetList(ctx context.Context, params task.TaskParams) (task.Tasks, error) {
+func (r *taskRepository) GetList(ctx context.Context, params common.RequestParams) (task.Tasks, error) {
 	ctx, cancel := r.getContext(ctx)
 	defer cancel()
 
@@ -90,8 +91,8 @@ func (r *taskRepository) Delete(ctx context.Context, id int64) error {
 	return err
 }
 
-// makeGetTaskQuery build query from TaskParams
-func makeGetTaskQuery(p task.TaskParams) string {
+// makeGetTaskQuery build query from RequestParams
+func makeGetTaskQuery(p common.RequestParams) string {
 	query := getTaskQuery
 	var conditions []string
 
@@ -133,13 +134,13 @@ const (
 			t.id,
 			t.user_id,
 			CONCAT_WS(' ', u.surname, u.name) as user_label,
-			u.price_per_hour,
 			t.task_id,
 			t.status,
 			t.description,
 			t.work_begin,
 			t.work_end,
-			t.date
+			t.date,
+			t.price_per_hour
 		FROM tasks t
 		JOIN users u ON u.id = t.user_id
 	`
@@ -152,12 +153,13 @@ const (
 			description=:description,
 			work_begin=:work_begin,
 			work_end=:work_end,
-			date=:date
+			date=:date,
+			price_per_hour=:price_per_hour
 		WHERE id = :id
 	`
 	insertTaskQuery = `
-		INSERT INTO tasks (user_id, task_id, status, description, work_begin, work_end, date)
-		VALUES (:user_id, :task_id, :status, :description, :work_begin, :work_end, :date)
+		INSERT INTO tasks (user_id, task_id, status, description, work_begin, work_end, date, price_per_hour)
+		VALUES (:user_id, :task_id, :status, :description, :work_begin, :work_end, :date, :price_per_hour)
 		RETURNING id;
 	`
 )

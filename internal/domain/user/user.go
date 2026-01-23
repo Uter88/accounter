@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+const UserType = "user"
+
 // Users
 type Users []User
 
@@ -17,6 +19,7 @@ type User struct {
 	Surname      string  `db:"surname" json:"surname"`
 	Patronymic   string  `db:"patronymic" json:"patronymic"`
 	PricePerHour float32 `db:"price_per_hour" json:"price_per_hour"`
+	MoneyEarned  float32 `db:"money_earned" json:"money_earned"`
 }
 
 // GetLabel return short string User representation
@@ -47,6 +50,16 @@ func (u User) IsValid(isAuth bool) bool {
 	return true
 }
 
+// MoneyEarned return total money earned value
+func (u User) GetMoneyEarned() float32 {
+	return utils.ToFixed(u.MoneyEarned, 2)
+}
+
+// FormatMoneyEarned return total money earned value as string
+func (u User) FormatMoneyEarned() string {
+	return utils.FormatMoney(u.GetMoneyEarned())
+}
+
 // GetID get id
 func (u User) GetID() int64 {
 	return u.ID
@@ -54,5 +67,5 @@ func (u User) GetID() int64 {
 
 // GetID get type of User entity
 func (u User) GetType() string {
-	return "user"
+	return UserType
 }

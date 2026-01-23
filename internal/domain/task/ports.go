@@ -11,7 +11,7 @@ import (
 type TaskRepository interface {
 
 	// Get list of Task
-	GetList(ctx context.Context, params TaskParams) (Tasks, error)
+	GetList(ctx context.Context, params common.RequestParams) (Tasks, error)
 
 	// Get one Task
 	GetOne(ctx context.Context, id int64) (Task, error)

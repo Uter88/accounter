@@ -24,7 +24,7 @@ func NewTaskService(repo TaskRepository, renderer TaskRenderer, eventBus TaskEve
 }
 
 // Get Task list
-func (ts *TaskService) GetTaskList(ctx context.Context, params TaskParams) (Tasks, error) {
+func (ts *TaskService) GetTaskList(ctx context.Context, params common.RequestParams) (Tasks, error) {
 	return ts.repo.GetList(ctx, params)
 }
 

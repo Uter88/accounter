@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
     work_begin BIGINT NOT NULL,
     work_end BIGINT NOT NULL,
     date BIGINT NOT NULL,
+	price_per_hour NUMERIC(12, 2) NOT NULL,
     PRIMARY KEY (id)
 );
 
