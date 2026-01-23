@@ -7,11 +7,6 @@ import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
-/*
-	 type selectValue interface {
-		int64 | string
-	}
-*/
 type SelectOption[T comparable] struct {
 	Label    string
 	Value    T
@@ -34,11 +29,14 @@ type SelectField[T comparable] struct {
 	clearable    bool
 	multiple     bool
 	required     bool
+
+	onUpdate app.EventHandler
 }
 
 func NewSelectField[T comparable]() *SelectField[T] {
 	return &SelectField[T]{
-		Vals: new([]T),
+		Vals:     new([]T),
+		onUpdate: func(ctx app.Context, e app.Event) {},
 	}
 }
 
@@ -54,6 +52,11 @@ func (sf *SelectField[T]) Value(v *T) *SelectField[T] {
 
 func (sf *SelectField[T]) Values(v *[]T) *SelectField[T] {
 	sf.Vals = v
+	return sf
+}
+
+func (sf *SelectField[T]) OnUpdate(cb app.EventHandler) *SelectField[T] {
+	sf.onUpdate = cb
 	return sf
 }
 
@@ -139,6 +142,8 @@ func (sf *SelectField[T]) makeInput() app.UI {
 func (sf *SelectField[T]) onInput(ctx app.Context, e app.Event) {
 	value := ctx.JSSrc().Get("value").String()
 	newValue := utils.StringToValue[T](value)
+
+	defer sf.onUpdate(ctx, e)
 
 	if sf.multiple {
 		for i, v := range *sf.Vals {

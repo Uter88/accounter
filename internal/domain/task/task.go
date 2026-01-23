@@ -2,7 +2,6 @@ package task
 
 import (
 	"accounter/pkg/utils"
-	"fmt"
 	"time"
 )
 
@@ -133,7 +132,12 @@ func (t Task) GetPrice() float32 {
 func (t Task) FormatPrice() string {
 	price := t.GetPrice()
 
-	return fmt.Sprintf("%.2f", price)
+	return utils.FormatMoney(price)
+}
+
+// FormatPricePerHour string representation of PPR
+func (t Task) FormatPricePerHour() string {
+	return utils.FormatMoney(t.PricePerHour)
 }
 
 // FormatDate string representation of date

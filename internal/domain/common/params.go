@@ -1,12 +1,12 @@
-package task
+package common
 
 import (
 	"accounter/pkg/utils"
 	"time"
 )
 
-// TaskParams Task request params
-type TaskParams struct {
+// RequestParams request params
+type RequestParams struct {
 	DateStart int64   `db:"date_start" json:"date_start" form:"date_start"`
 	DateEnd   int64   `db:"date_end" json:"date_end" form:"date_end"`
 	Timezone  string  `db:"-" json:"timezone" form:"timezone"`
@@ -19,9 +19,9 @@ type TaskParams struct {
 	Limit     int    `db:"limit" json:"limit" form:"limit"`
 }
 
-// NewTaskParams creates new TaskParams
-func NewTaskParams(n time.Time) TaskParams {
-	return TaskParams{
+// NewRequestParams creates new RequestParams
+func NewRequestParams(n time.Time) RequestParams {
+	return RequestParams{
 		Timezone:  time.Local.String(),
 		DateStart: time.Date(n.Year(), n.Month(), n.Day(), 0, 0, 0, 0, n.Location()).Unix(),
 		DateEnd:   time.Date(n.Year(), n.Month(), n.Day(), 23, 59, 59, 0, n.Location()).Unix(),
@@ -30,7 +30,7 @@ func NewTaskParams(n time.Time) TaskParams {
 }
 
 // Encode encode params to tools.Params
-func (tp TaskParams) Encode() utils.Params {
+func (tp RequestParams) Encode() utils.Params {
 	params := utils.NewParams()
 
 	params.Set("date_start", tp.DateStart)

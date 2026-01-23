@@ -1,4 +1,4 @@
-package task
+package common
 
 import (
 	"accounter/pkg/utils"
@@ -9,25 +9,25 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-// TaskParams testing suite
-type testTaskParamsSuite struct {
+// RequestParams testing suite
+type testRequestParamsSuite struct {
 	suite.Suite
 	dateStart    time.Time
 	dateEnd      time.Time
-	sampleParams TaskParams
+	sampleParams RequestParams
 }
 
-// TestTaskSuite run Task testing
-func TestTaskParamsSuite(t *testing.T) {
-	suite.Run(t, new(testTaskParamsSuite))
+// TestRequestParamsSuite run Task testing
+func TestRequestParamsSuite(t *testing.T) {
+	suite.Run(t, new(testRequestParamsSuite))
 }
 
 // SetupTest testing preparations
-func (suite *testTaskParamsSuite) SetupTest() {
+func (suite *testRequestParamsSuite) SetupTest() {
 	suite.dateStart = time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local)
 	suite.dateEnd = time.Date(2026, 1, 1, 23, 59, 59, 0, time.Local)
 
-	suite.sampleParams = TaskParams{
+	suite.sampleParams = RequestParams{
 		DateStart: suite.dateStart.Unix(),
 		DateEnd:   suite.dateEnd.Unix(),
 		Timezone:  "Local",
@@ -36,8 +36,8 @@ func (suite *testTaskParamsSuite) SetupTest() {
 	}
 }
 
-func (suite *testTaskParamsSuite) TestNewParams() {
-	params := NewTaskParams(suite.dateStart)
+func (suite *testRequestParamsSuite) TestNewParams() {
+	params := NewRequestParams(suite.dateStart)
 
 	suite.Equal(params.DateStart, suite.dateStart.Unix(), "Incorrect date start")
 	suite.Equal(params.DateEnd, suite.dateEnd.Unix(), "Incorrect date start")
@@ -51,7 +51,7 @@ func (suite *testTaskParamsSuite) TestNewParams() {
 	suite.Empty(params.Users, "Incorrect users")
 }
 
-func (suite *testTaskParamsSuite) TestEncode() {
+func (suite *testRequestParamsSuite) TestEncode() {
 	encoded := suite.sampleParams.Encode()
 
 	tests := []struct {

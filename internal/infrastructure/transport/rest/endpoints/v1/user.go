@@ -1,15 +1,22 @@
 package v1
 
 import (
+	"accounter/internal/domain/common"
 	"accounter/internal/domain/user"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (e *v1Engine) getUsersList(c *gin.Context) {
-	if result, err := e.userService.GetUsersList(c); err != nil {
+	params := common.NewRequestParams(time.Now())
+
+	if err := c.ShouldBind(&params); err != nil {
+		e.writeErr(c, http.StatusBadRequest, err)
+
+	} else if result, err := e.userService.GetUsersList(c, params); err != nil {
 		e.writeErr(c, http.StatusInternalServerError, err)
 
 	} else {
@@ -35,10 +42,7 @@ func (e *v1Engine) deleteUser(c *gin.Context) {
 	if id, err := e.parseID(c); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
-	} else if user, err := e.userService.GetUser(c, id); err != nil {
-		e.writeErr(c, http.StatusNotFound, err)
-
-	} else if err = e.userService.DeleteUser(e.getCurrentUser(c), &user); err != nil {
+	} else if err = e.userService.DeleteUser(e.getCurrentUser(c), id); err != nil {
 		e.writeErr(c, http.StatusBadRequest, err)
 
 	} else {

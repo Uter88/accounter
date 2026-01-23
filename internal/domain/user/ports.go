@@ -1,12 +1,15 @@
 package user
 
-import "context"
+import (
+	"accounter/internal/domain/common"
+	"context"
+)
 
 // User port
 type UserRepository interface {
 
 	// Get list of User
-	GetList(ctx context.Context) (Users, error)
+	GetList(ctx context.Context, params common.RequestParams) (Users, error)
 
 	// Get one User by id
 	GetOne(ctx context.Context, id int64) (User, error)

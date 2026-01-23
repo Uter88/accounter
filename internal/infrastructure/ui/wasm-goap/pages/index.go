@@ -66,7 +66,7 @@ func (inp *indexPage) Render() app.UI {
 									components.NewUserList(inp.Ctx, inp.Ctx.Store.GetUsers()),
 								),
 
-							components.NewTasksChart(inp.Ctx.Store.GetTasks(), inp.Ctx.Store.GetTaskParams()),
+							components.NewTasksChart(inp.Ctx.Store.GetTasks(), inp.Ctx.Store.GetRequestParams()),
 						),
 
 					app.Div().

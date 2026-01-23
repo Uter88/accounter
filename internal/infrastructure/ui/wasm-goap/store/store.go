@@ -2,7 +2,7 @@ package store
 
 import (
 	"accounter/config"
-	"accounter/internal/domain/task"
+	dcommon "accounter/internal/domain/common"
 	"accounter/internal/domain/user"
 	"accounter/internal/infrastructure/common"
 	"accounter/internal/infrastructure/ui/wasm-goap/models"
@@ -16,9 +16,10 @@ import (
 )
 
 type baseStore struct {
-	api  string
-	user user.CurrentUser
-	ws   *models.WebsocketClient
+	api    string
+	user   user.CurrentUser
+	ws     *models.WebsocketClient
+	params *dcommon.RequestParams
 }
 
 func (b *baseStore) SetUser(ctx app.Context, user user.CurrentUser, remember bool) {
@@ -56,8 +57,10 @@ func (b *baseStore) LoadAuthData(ctx app.Context) (login, password string, ok bo
 
 	if err := ctx.LocalStorage().Get("auth_data", &authData); err != nil {
 		return
+
 	} else if res, err := base64.StdEncoding.DecodeString(authData); err != nil {
 		return
+
 	} else {
 		authData = string(res)
 	}
@@ -79,6 +82,16 @@ func (b *baseStore) GetUser() user.CurrentUser {
 
 func (b *baseStore) IsAuthorized() bool {
 	return b.user.IsAuthorized
+}
+
+func (b *baseStore) SetRequestParams(p *dcommon.RequestParams) {
+	b.params = p
+
+	b.ws.SendMessage(common.WsMessageParams, p)
+}
+
+func (b *baseStore) GetRequestParams() *dcommon.RequestParams {
+	return b.params
 }
 
 func newRequest[R any](s baseStore) utils.Request[common.Response[R]] {
@@ -103,12 +116,13 @@ type Store struct {
 
 // NewStore creates new Store
 func NewStore(cfg config.Config, ws *models.WebsocketClient) *Store {
-	base := &baseStore{
-		api: fmt.Sprintf("http://localhost:%d/api/v1", cfg.HTTP.Port),
-		ws:  ws,
-	}
+	params := dcommon.NewRequestParams(time.Now())
 
-	params := task.NewTaskParams(time.Now())
+	base := &baseStore{
+		api:    fmt.Sprintf("http://localhost:%d/api/v1", cfg.HTTP.Port),
+		ws:     ws,
+		params: &params,
+	}
 
 	s := &Store{
 		baseStore:  base,
@@ -116,7 +130,6 @@ func NewStore(cfg config.Config, ws *models.WebsocketClient) *Store {
 		usersStore: usersStore{baseStore: base},
 		tasksStore: tasksStore{
 			baseStore: base,
-			params:    &params,
 		},
 	}
 

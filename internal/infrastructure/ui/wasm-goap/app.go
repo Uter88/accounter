@@ -68,7 +68,7 @@ func (a *App) Run(ctx context.Context) error {
 			"/web/js/echarts/echarts.min.js",
 			"/web/js/bootstrap.bundle.min.js",
 		},
-		Resources: app.LocalDir(".."),
+		//Resources: app.LocalDir(".."),
 	}
 
 	serv := http.Server{

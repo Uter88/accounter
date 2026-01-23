@@ -2,7 +2,6 @@ package store
 
 import (
 	"accounter/internal/domain/task"
-	"accounter/internal/infrastructure/common"
 	"accounter/pkg/utils"
 	"fmt"
 	"net/http"
@@ -14,7 +13,6 @@ type tasksStore struct {
 	*baseStore
 
 	tasks   task.Tasks
-	params  *task.TaskParams
 	loading bool
 }
 
@@ -79,16 +77,6 @@ func (s *tasksStore) ExportTasks(format utils.FileFormat) string {
 
 func (s *tasksStore) GetTasks() task.Tasks {
 	return s.tasks
-}
-
-func (s *tasksStore) SetTaskParams(p *task.TaskParams) {
-	s.params = p
-
-	s.ws.SendMessage(common.WsMessageParams, p)
-}
-
-func (s *tasksStore) GetTaskParams() *task.TaskParams {
-	return s.params
 }
 
 func (s *tasksStore) GetTasksLoading() bool {

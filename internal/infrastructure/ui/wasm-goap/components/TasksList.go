@@ -1,6 +1,7 @@
 package components
 
 import (
+	dcommon "accounter/internal/domain/common"
 	"accounter/internal/domain/task"
 	"accounter/internal/infrastructure/ui/wasm-goap/common"
 	"accounter/pkg/utils"
@@ -10,30 +11,35 @@ import (
 	"github.com/maxence-charriere/go-app/v10/pkg/app"
 )
 
+// TaskList table with Tasks
 type TaskList struct {
 	app.Compo
 	common.BaseComponent
 
 	Tasks  task.Tasks
-	params *task.TaskParams
+	params *dcommon.RequestParams
 }
 
+// NewTaskList creates new TaskList
 func NewTaskList(ctx common.AppContext, tasks task.Tasks) *TaskList {
 	return &TaskList{
 		BaseComponent: common.NewBaseComponent(ctx),
 		Tasks:         tasks,
-		params:        ctx.Store.GetTaskParams(),
+		params:        ctx.Store.GetRequestParams(),
 	}
 }
 
+// OnMount on mounted hook
 func (tl *TaskList) OnMount(ctx app.Context) {
 	tl.onRequest(ctx)
 }
 
+// isLoading returns Tasks loading state
 func (tl *TaskList) isLoading() bool {
 	return tl.Ctx.Store.GetTasksLoading()
 }
 
+// Render renders TaskList
 func (tl *TaskList) Render() app.UI {
 	rows := make([]app.UI, len(tl.Tasks))
 
@@ -131,17 +137,19 @@ func (tl *TaskList) Render() app.UI {
 		)
 }
 
+// onRequest trigger for request Tasks
 func (tl *TaskList) onRequest(ctx app.Context) {
-	tl.Ctx.Store.SetTaskParams(tl.params)
+	tl.Ctx.Store.SetRequestParams(tl.params)
 
 	if err := tl.Ctx.Store.RequestTasks(ctx); err != nil {
 		tl.ShowNotification(ctx, "Error", err.Error())
 	}
 }
 
+// onEdit trigger for edit Task
 func (tl *TaskList) onEdit(ctx app.Context, t *task.Task) {
 	if t == nil {
-		params := tl.Ctx.Store.GetTaskParams()
+		params := tl.Ctx.Store.GetRequestParams()
 		tasks := tl.Ctx.Store.GetTasks()
 
 		nt := task.NewTask(time.Unix(params.DateStart, 0))
@@ -161,6 +169,7 @@ func (tl *TaskList) onEdit(ctx app.Context, t *task.Task) {
 	ctx.NewActionWithValue("setTask", *t)
 }
 
+// onDelete trigger for deletion Task
 func (tl *TaskList) onDelete(ctx app.Context, t task.Task) {
 	if !tl.ShowConfirm(ctx, fmt.Sprintf("Delete task %s?", t.Description)) {
 		return
@@ -171,11 +180,13 @@ func (tl *TaskList) onDelete(ctx app.Context, t task.Task) {
 	}
 }
 
+// onExport for export Tasks
 func (tl *TaskList) onExport(ctx app.Context, format utils.FileFormat) {
 	api := tl.Ctx.Store.ExportTasks(format)
 	ctx.Navigate(api)
 }
 
+// getSummary returns summary row
 func (tl *TaskList) getSummary() app.UI {
 	var (
 		dur   time.Duration
@@ -194,6 +205,6 @@ func (tl *TaskList) getSummary() app.UI {
 		app.Td(), app.Td(), app.Td(), app.Td(), app.Td(), app.Td(),
 		app.Td(),
 		app.Td().Text(utils.FormatDuration(dur, false)).Class("text-bold"),
-		app.Td().Text(fmt.Sprintf("%.2f", price)).Class("text-bold"),
+		app.Td().Text(utils.FormatMoney(price)).Class("text-bold"),
 	)
 }

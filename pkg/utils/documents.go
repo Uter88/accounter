@@ -2,8 +2,10 @@ package utils
 
 import "strings"
 
+// File format
 type FileFormat string
 
+// Available file formats
 const (
 	FileFormatCSV  FileFormat = "csv"
 	FileFormatXLSX FileFormat = "xlsx"
@@ -14,6 +16,7 @@ const (
 	FileFormatXML  FileFormat = "xml"
 )
 
+// Parse parse FileFormat from string
 func (f FileFormat) Parse(v string) FileFormat {
 	res := FileFormat(strings.TrimSpace(strings.ToLower(v)))
 

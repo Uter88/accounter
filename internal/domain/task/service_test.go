@@ -29,7 +29,7 @@ type mockTaskRepostory struct {
 }
 
 // GetList mock of returning Tasks
-func (m *mockTaskRepostory) GetList(ctx context.Context, p TaskParams) (Tasks, error) {
+func (m *mockTaskRepostory) GetList(ctx context.Context, p common.RequestParams) (Tasks, error) {
 	return m.store, nil
 }
 
@@ -156,7 +156,7 @@ func (suite *testServiceSuite) SetupTest() {
 
 // TestGetTaskList testing of Tasks getting
 func (suite *testServiceSuite) TestGetTaskList() {
-	params := NewTaskParams(suite.fixedTime)
+	params := common.NewRequestParams(suite.fixedTime)
 
 	result, err := suite.sampleService.GetTaskList(suite.ctx, params)
 
