@@ -1,5 +1,5 @@
 ### The accounter application is used to keep track of working hours.
-[![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org)
+[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org)
 
 #### Project structure:
 
