@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+var InvalidEmailError = errors.New("invalid email")
+
 // Patterns
 const (
 	emailSymbols = `[0-9A-Za-z_@.^\t\n\f\r]`
@@ -29,5 +31,5 @@ func ValidEmail(email string) error {
 		return nil
 	}
 
-	return errors.New("invalid email")
+	return InvalidEmailError
 }
