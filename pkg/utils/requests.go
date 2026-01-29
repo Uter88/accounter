@@ -56,6 +56,12 @@ func (p *Params) Get(key string) string {
 	return p.values.Get(key)
 }
 
+// Delete remove value by specified key
+func (p *Params) Delete(key string) *Params {
+	p.values.Del(key)
+	return p
+}
+
 // Encode encode values to query string starts with ?
 func (p *Params) Encode() string {
 	if len(p.values) == 0 {

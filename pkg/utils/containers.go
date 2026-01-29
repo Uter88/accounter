@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"cmp"
+	"iter"
 	"slices"
 	"sync"
 )
@@ -43,12 +44,6 @@ type OrderedMap[K cmp.Ordered, V any] struct {
 	keys  []K
 }
 
-// orderMapItem single item of OrderMap
-type orderMapItem[K cmp.Ordered, V any] struct {
-	Key   K
-	Value V
-}
-
 // NewOrderedMap creates new OrderedMap
 func NewOrderedMap[K cmp.Ordered, V any]() *OrderedMap[K, V] {
 	return &OrderedMap[K, V]{
@@ -58,7 +53,7 @@ func NewOrderedMap[K cmp.Ordered, V any]() *OrderedMap[K, V] {
 
 // Len returns map length
 func (om *OrderedMap[K, V]) Len() int {
-	return len(om.items)
+	return len(om.keys)
 }
 
 // Keys returns map keys
@@ -67,39 +62,56 @@ func (om *OrderedMap[K, V]) Keys() []K {
 }
 
 // Items returns pairs of key and value
-func (om *OrderedMap[K, V]) Items() []orderMapItem[K, V] {
-	result := make([]orderMapItem[K, V], len(om.keys))
-
-	for i, k := range om.keys {
-		result[i] = orderMapItem[K, V]{
-			Key:   k,
-			Value: om.items[k],
+func (om *OrderedMap[K, V]) Items() iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		for _, k := range om.keys {
+			if !yield(k, om.items[k]) {
+				return
+			}
 		}
 	}
+}
 
-	return result
+// Values returns map values
+func (om *OrderedMap[K, V]) Values() iter.Seq[V] {
+	return func(yield func(V) bool) {
+		for _, k := range om.keys {
+			if !yield(om.items[k]) {
+				return
+			}
+		}
+	}
 }
 
 // Sort lexical sorting of map keys
-func (om *OrderedMap[K, V]) Sort() *OrderedMap[K, V] {
+func (om *OrderedMap[K, V]) Sort() {
 	slices.Sort(om.keys)
-	return om
+}
+
+// SortBy sorting of map keys by specified callback function
+func (om *OrderedMap[K, V]) SortBy(cb func(a, b K) int) {
+	slices.SortFunc(om.keys, cb)
 }
 
 // Set set value by key
-func (om *OrderedMap[K, V]) Set(key K, value V) *OrderedMap[K, V] {
+func (om *OrderedMap[K, V]) Set(key K, value V) {
 	if !slices.Contains(om.keys, key) {
 		om.keys = append(om.keys, key)
 	}
 
 	om.items[key] = value
-	return om
 }
 
 // Get returns value by specified key
 func (om *OrderedMap[K, V]) Get(key K) (V, bool) {
 	value, ok := om.items[key]
 	return value, ok
+}
+
+// Delete item by specified key
+func (om *OrderedMap[K, V]) Delete(key K) {
+	delete(om.items, key)
+	om.keys = slices.DeleteFunc(om.keys, func(k K) bool { return k == key })
 }
 
 // SyncSlice safe slice with mutex
@@ -129,12 +141,12 @@ func (ss *SyncSlice[V]) RemoveFunc(cb func(V) bool) {
 
 // Remove remove item from slice by specified index
 func (ss *SyncSlice[V]) Remove(i int) {
-	if i < 0 {
-		return
-	}
-
 	ss.mu.Lock()
 	defer ss.mu.Unlock()
+
+	if i < 0 || i >= len(ss.items) {
+		return
+	}
 
 	ss.items = slices.Delete(ss.items, i, i+1)
 }
@@ -147,8 +159,8 @@ func (ss *SyncSlice[V]) Append(items ...V) {
 	ss.items = append(ss.items, items...)
 }
 
-// GetValues returns copy of slice
-func (ss *SyncSlice[V]) GetValues() []V {
+// Values returns copy of slice
+func (ss *SyncSlice[V]) Values() []V {
 	ss.mu.RLock()
 	defer ss.mu.RUnlock()
 
@@ -157,6 +169,14 @@ func (ss *SyncSlice[V]) GetValues() []V {
 	copy(result, ss.items)
 
 	return result
+}
+
+// Len returns length of slice
+func (ss *SyncSlice[V]) Len() int {
+	ss.mu.RLock()
+	defer ss.mu.RUnlock()
+
+	return len(ss.items)
 }
 
 // SyncMap multithread safe map

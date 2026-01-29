@@ -16,8 +16,16 @@ func IsEmpty(v any) bool {
 		return true
 	}
 
-	if reflect.ValueOf(v).Kind() == reflect.Ptr {
+	if reflect.ValueOf(v).Kind() == reflect.Pointer {
 		if reflect.ValueOf(v).IsNil() {
+			return true
+		}
+	} else if reflect.ValueOf(v).Kind() == reflect.Slice {
+		if reflect.ValueOf(v).Len() == 0 {
+			return true
+		}
+	} else if reflect.ValueOf(v).Kind() == reflect.Map {
+		if reflect.ValueOf(v).Len() == 0 {
 			return true
 		}
 	}
@@ -113,6 +121,8 @@ func PtrToValue[T comparable](v T) any {
 	case *float32:
 		return *tp
 	case *float64:
+		return *tp
+	case *bool:
 		return *tp
 
 	default:

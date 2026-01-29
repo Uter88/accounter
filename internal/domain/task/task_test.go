@@ -233,19 +233,11 @@ func (suite *testTaskSuite) TestFormatMethods() {
 		Date:         suite.fixedTime.Unix(),
 	}
 
-	// Test FormatPrice
 	suite.Equal("151.00", task.FormatPrice())
-
-	// Test FormatDate
+	suite.Equal("75.50", task.FormatPricePerHour())
 	suite.Equal("01.01.2026", task.FormatDate())
-
-	// Test FormatWorkBegin
 	suite.Equal("12:00", task.FormatWorkBegin())
-
-	// Test FormatWorkEnd
 	suite.Equal("14:00", task.FormatWorkEnd())
-
-	// Test FormatDuration
 	suite.Equal("02:00:00", task.FormatDuration(true))
 	suite.Equal("02:00", task.FormatDuration(false))
 }

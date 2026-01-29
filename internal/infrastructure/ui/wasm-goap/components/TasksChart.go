@@ -128,29 +128,29 @@ func (t *TasksChart) makeLineSeries(tasks task.Tasks) *models.ChartOptions {
 	xAxis.Min = float64(t.Params.DateStart * 1000)
 	xAxis.Max = float64(t.Params.DateEnd * 1000)
 
-	for _, item := range tasks.GroupByUsers().Items() {
-		legends = append(legends, item.Key)
+	for key, item := range tasks.GroupByUsers().Items() {
+		legends = append(legends, key)
 
 		s := models.Series{
 			Type: models.SeriesLine,
-			Name: item.Key,
+			Name: key,
 			Label: models.Label{
 				Show:     true,
 				FontSize: 9,
 			},
 		}
 
-		for _, item := range item.Value.GroupByDates().Items() {
+		for key, item := range item.GroupByDates().Items() {
 			var value any
 
 			switch t.valueType {
 			case "money":
-				value = int(item.Value.GetPrice())
+				value = int(item.GetPrice())
 			case "time":
-				value = utils.ToFixed(item.Value.GetDuration().Hours(), 1)
+				value = utils.ToFixed(item.GetDuration().Hours(), 1)
 			}
 
-			s.Data = append(s.Data, models.Array{item.Key * 1000, value})
+			s.Data = append(s.Data, models.Array{key * 1000, value})
 		}
 
 		series = append(series, s)
@@ -174,17 +174,17 @@ func (t *TasksChart) makeBarSeries(tasks task.Tasks) *models.ChartOptions {
 		yAxis = models.NewYAxis("value")
 	)
 
-	for _, item := range tasks.GroupByUsers().Items() {
-		xAxis.Data = append(xAxis.Data, item.Key)
-		legends = append(legends, item.Key)
+	for key, item := range tasks.GroupByUsers().Items() {
+		xAxis.Data = append(xAxis.Data, key)
+		legends = append(legends, key)
 
 		var value any
 
 		switch t.valueType {
 		case "money":
-			value = item.Value.GetPrice()
+			value = item.GetPrice()
 		case "time":
-			value = utils.ToFixed(item.Value.GetDuration().Hours(), 1)
+			value = utils.ToFixed(item.GetDuration().Hours(), 1)
 		}
 
 		series.Data = append(series.Data, value)
